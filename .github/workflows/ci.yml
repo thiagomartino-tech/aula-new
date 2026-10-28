@@ -1,10 +1,16 @@
 name: CI
 
-# Roda nos pushes das branches de trabalho e em todo pull request, para a
+# Roda em todo pull request e nos pushes diretos à branch padrão, para a
 # tabela nunca ser mesclada com dados que não fecham.
+#
+# O push é limitado a essas branches de propósito: uma branch com PR aberto
+# já é coberta pelo gatilho pull_request, e deixar os dois pegarem a mesma
+# branch fazia cada push disparar duas execuções idênticas.
 on:
   push:
-    branches: ['**']
+    branches:
+      - main
+      - claude/dreamy-heisenberg-ef2kzi
   pull_request:
 
 # Um push novo cancela a execução anterior da mesma branch.
