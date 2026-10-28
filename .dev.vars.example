@@ -1,0 +1,18 @@
+# Copie para .dev.vars e preencha para rodar `npm run dev` com as integrações.
+# .dev.vars está no .gitignore — nunca comite valores reais.
+#
+# Em produção estes valores NÃO vêm daqui: cadastre com
+#   npx wrangler secret put <NOME>
+
+# --- Supabase ------------------------------------------------------------
+# Painel do Supabase > Project Settings > API
+SUPABASE_URL=
+# Chave service_role. Ignora RLS, então fica só no Worker, nunca no browser.
+SUPABASE_SERVICE_ROLE_KEY=
+
+# --- NVIDIA LLM API ------------------------------------------------------
+# https://build.nvidia.com — a chave começa com "nvapi-"
+NVIDIA_API_KEY=
+# Opcionais
+# NVIDIA_MODEL=meta/llama-3.3-70b-instruct
+# NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1

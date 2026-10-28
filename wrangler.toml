@@ -1,0 +1,30 @@
+# Configuração do Cloudflare Worker.
+# Deploy: npm run deploy    |    Local: npm run dev
+name = "brasileirao-simulador"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Serve public/ como site estático. O Worker intercepta /api/*; todo o resto
+# cai aqui, e rotas sem arquivo correspondente recebem o index.html.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[observability]
+enabled = true
+
+# --- Variáveis públicas (sem segredo) -----------------------------------
+[vars]
+# Modelo usado nas chamadas à NVIDIA LLM API. Trocar aqui não requer segredo.
+NVIDIA_MODEL = "meta/llama-3.3-70b-instruct"
+
+# --- Segredos ------------------------------------------------------------
+# NUNCA coloque segredos neste arquivo: ele vai para o git.
+#
+# Em produção, cadastre com:
+#   npx wrangler secret put SUPABASE_URL
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+#   npx wrangler secret put NVIDIA_API_KEY
+#
+# Em desenvolvimento, use .dev.vars (já no .gitignore).
