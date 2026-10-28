@@ -1,6 +1,10 @@
 # Configuração do Cloudflare Worker.
 # Deploy: npm run deploy    |    Local: npm run dev
-name = "brasileirao-simulador"
+#
+# `name` precisa ser igual ao nome do Worker no painel do Cloudflare. O build
+# automático a partir do Git publica neste nome, então divergir aqui faz o
+# build falhar antes mesmo de compilar.
+name = "aula-new"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
