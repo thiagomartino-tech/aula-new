@@ -41,3 +41,28 @@ jobs:
 
       - name: Rodar os testes
         run: npm test
+
+  seed:
+    name: Seed em sincronia
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # O gerador só importa de src/data/ e de módulos nativos, então não
+      # precisa de npm ci: nada a instalar.
+      - name: Regerar o seed a partir de src/data/
+        run: npm run seed
+
+      - name: Conferir se o seed commitado está atualizado
+        run: |
+          if ! git diff --exit-code -- supabase/seed.sql; then
+            echo "::error file=supabase/seed.sql::O seed saiu de sincronia com src/data/. Rode 'npm run seed' e comite o resultado."
+            exit 1
+          fi
