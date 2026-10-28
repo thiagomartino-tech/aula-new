@@ -1,0 +1,43 @@
+name: CI
+
+# Roda nos pushes das branches de trabalho e em todo pull request, para a
+# tabela nunca ser mesclada com dados que não fecham.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Um push novo cancela a execução anterior da mesma branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Testes (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # package.json declara engines >= 20, então as duas pontas são testadas.
+        node: ['20', '22']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Rodar os testes
+        run: npm test
