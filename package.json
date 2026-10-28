@@ -1,0 +1,20 @@
+{
+  "name": "brasileirao-simulador",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tabela do Brasileirão Série A 2026 com simulador das 6 rodadas finais, em Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/*.test.js",
+    "seed": "node scripts/generate-seed.mjs",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.42.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
