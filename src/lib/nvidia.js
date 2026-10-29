@@ -73,7 +73,7 @@ class NvidiaClient {
    * @param {AbortSignal} [args.signal]
    * @returns {Promise<{text: string, model: string, usage: object|null}>}
    */
-  async chat({ messages, temperature = 0.4, maxTokens = 900, signal } = {}) {
+  async chat({ messages, temperature = 0.4, maxTokens = 1200, signal } = {}) {
     let res;
     try {
       res = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -89,6 +89,13 @@ class NvidiaClient {
           temperature,
           max_tokens: maxTokens,
           stream: false,
+          // Modelos de raciocínio, como a família Nemotron, vêm com o
+          // "pensamento" ligado por padrão — e ele divide o mesmo orçamento
+          // de max_tokens com a resposta. Se o raciocínio consome o teto,
+          // a chamada volta 200 com content vazio. Aqui só interessa a
+          // resposta final, então o pensamento é desligado.
+          // Modelos que não conhecem esta opção simplesmente a ignoram.
+          chat_template_kwargs: { enable_thinking: false },
         }),
         signal,
       });
@@ -131,9 +138,30 @@ class NvidiaClient {
       throw new HttpError(502, 'Resposta da NVIDIA não é JSON válido');
     }
 
-    const content = payload?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string' || !content.trim()) {
-      throw new HttpError(502, 'A NVIDIA respondeu sem conteúdo');
+    const choice = payload?.choices?.[0];
+    const message = choice?.message;
+
+    // `content` é o normal. Alguns modelos de raciocínio devolvem a resposta
+    // em `reasoning_content` quando o pensamento não foi desligado do lado
+    // deles, então ele serve de reserva antes de desistir.
+    const content = [message?.content, message?.reasoning_content].find(
+      (value) => typeof value === 'string' && value.trim(),
+    );
+
+    if (!content) {
+      console.error(
+        `NVIDIA sem conteúdo: finish_reason=${choice?.finish_reason} ` +
+          `usage=${JSON.stringify(payload?.usage ?? null)}`,
+      );
+      // `length` significa que o teto de tokens acabou antes da resposta —
+      // tipicamente o raciocínio tendo consumido tudo. Vale dizer isso em
+      // vez de um "sem conteúdo" que não indica saída nenhuma.
+      throw new HttpError(
+        502,
+        choice?.finish_reason === 'length'
+          ? 'A resposta da NVIDIA foi cortada pelo limite de tokens antes de gerar conteúdo'
+          : 'A NVIDIA respondeu sem conteúdo',
+      );
     }
 
     return {
