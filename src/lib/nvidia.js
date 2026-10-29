@@ -14,7 +14,40 @@
 import { HttpError } from './http.js';
 
 const DEFAULT_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const DEFAULT_MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b';
+const DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct';
+
+/** Apaga chaves da NVIDIA de um texto antes de ele sair para o cliente. */
+export function redact(text) {
+  return text.replace(/nvapi-[A-Za-z0-9_-]+/g, 'nvapi-***');
+}
+
+/**
+ * Tira do corpo de erro da NVIDIA a frase que explica a recusa. O formato
+ * varia entre `detail`, `message` e `error.message`, então os três são
+ * tentados antes de desistir e devolver o texto cru truncado.
+ */
+export function explainFailure(text, limit = 200) {
+  if (!text?.trim()) return null;
+
+  let reason = null;
+  try {
+    const body = JSON.parse(text);
+    const candidate =
+      body?.detail ??
+      body?.message ??
+      body?.error?.message ??
+      (typeof body?.error === 'string' ? body.error : null);
+    if (typeof candidate === 'string' && candidate.trim()) {
+      reason = candidate.trim();
+    }
+  } catch {
+    // Não era JSON: o texto cru serve.
+  }
+
+  reason ??= text.trim();
+  reason = redact(reason).replace(/\s+/g, ' ');
+  return reason.length > limit ? `${reason.slice(0, limit)}…` : reason;
+}
 
 export function createNvidia(env) {
   if (!env.NVIDIA_API_KEY) return null;
@@ -69,15 +102,26 @@ class NvidiaClient {
 
     const text = await res.text();
     if (!res.ok) {
-      // O corpo do erro pode citar a chave; fica no log, não na resposta.
       console.error(`NVIDIA ${res.status}: ${text}`);
-      const message =
-        res.status === 401 || res.status === 403
-          ? 'A NVIDIA recusou a chave de API (NVIDIA_API_KEY)'
-          : res.status === 429
-            ? 'Limite de uso da NVIDIA atingido; tente de novo em instantes'
-            : 'Erro ao chamar a NVIDIA LLM API';
-      throw new HttpError(res.status === 429 ? 429 : 502, message);
+
+      if (res.status === 401 || res.status === 403) {
+        // Num erro de autenticação o corpo costuma ecoar a chave enviada,
+        // então aqui nada dele é repassado.
+        throw new HttpError(502, 'A NVIDIA recusou a chave de API (NVIDIA_API_KEY)');
+      }
+      if (res.status === 429) {
+        throw new HttpError(429, 'Limite de uso da NVIDIA atingido; tente de novo em instantes');
+      }
+
+      // Nos demais casos o motivo é diagnóstico — "modelo não encontrado",
+      // por exemplo. Sem ele sobra uma mensagem genérica que não ajuda
+      // ninguém a consertar nada.
+      const reason = explainFailure(text);
+      throw new HttpError(
+        502,
+        `A NVIDIA recusou a requisição (HTTP ${res.status})` +
+          (reason ? `: ${reason}` : ''),
+      );
     }
 
     let payload;

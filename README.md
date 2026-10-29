@@ -125,7 +125,7 @@ npx wrangler secret put NVIDIA_API_KEY
 A chave sai de [build.nvidia.com](https://build.nvidia.com) e começa com
 `nvapi-`. As chamadas vão para `https://integrate.api.nvidia.com/v1/chat/completions`,
 que é compatível com o formato da OpenAI. O modelo padrão é
-`nvidia/nemotron-3.5-lightning-30b-a3b` e pode ser trocado em `wrangler.toml`
+`meta/llama-3.3-70b-instruct` e pode ser trocado em `wrangler.toml`
 (`NVIDIA_MODEL`), sem mexer em segredo nenhum.
 
 ### `POST /api/chat`
