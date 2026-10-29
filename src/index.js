@@ -9,6 +9,7 @@
 import { HttpError, json, jsonError } from './lib/http.js';
 import { handleBootstrap } from './routes/bootstrap.js';
 import { handleAnalyze } from './routes/analyze.js';
+import { handleChat } from './routes/chat.js';
 import {
   handleGetSimulation,
   handleSaveSimulation,
@@ -22,6 +23,7 @@ const ROUTES = [
   ['GET', '/api/health', handleHealth],
   ['GET', '/api/bootstrap', handleBootstrap],
   ['POST', '/api/analyze', handleAnalyze],
+  ['POST', '/api/chat', handleChat],
   ['POST', '/api/simulations', handleSaveSimulation],
   ['GET', '/api/simulations/:id', handleGetSimulation],
 ];

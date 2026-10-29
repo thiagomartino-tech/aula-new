@@ -86,6 +86,7 @@ servidor, então a tabela que você vê e a que a IA recebe nunca divergem.
 | `GET /api/health` | Diz quais integrações estão configuradas |
 | `GET /api/bootstrap` | Clubes, classificação, jogos restantes e faixas da tabela |
 | `POST /api/analyze` | Manda o cenário simulado para a NVIDIA LLM API |
+| `POST /api/chat` | Chat genérico com a NVIDIA, sem nada do Brasileirão |
 | `POST /api/simulations` | Salva a simulação e devolve um id curto |
 | `GET /api/simulations/:id` | Carrega uma simulação salva |
 
@@ -122,8 +123,28 @@ npx wrangler secret put NVIDIA_API_KEY
 ```
 
 A chave sai de [build.nvidia.com](https://build.nvidia.com) e começa com
-`nvapi-`. O modelo padrão é `meta/llama-3.3-70b-instruct` e pode ser trocado em
-`wrangler.toml` (`NVIDIA_MODEL`), sem mexer em segredo nenhum.
+`nvapi-`. As chamadas vão para `https://integrate.api.nvidia.com/v1/chat/completions`,
+que é compatível com o formato da OpenAI. O modelo padrão é
+`meta/llama-3.3-70b-instruct` e pode ser trocado em `wrangler.toml`
+(`NVIDIA_MODEL`), sem mexer em segredo nenhum.
+
+### `POST /api/chat`
+
+Chat direto com o modelo. Aceita a forma curta:
+
+```json
+{ "message": "explique o saldo de gols", "system": "responda em uma frase" }
+```
+
+ou a conversa inteira, para manter o histórico:
+
+```json
+{ "messages": [{ "role": "user", "content": "oi" }] }
+```
+
+Opcionais: `temperature` (0 a 2) e `maxTokens` (1 a 4096). A resposta traz
+`reply`, `model` e `usage`. Limites de entrada: 40 mensagens, 8000 caracteres
+cada e 24000 no total.
 
 Com a chave configurada, o botão "Analisar com IA" aparece: ele manda a tabela
 final projetada e os palpites para o modelo, que comenta título, Libertadores e
