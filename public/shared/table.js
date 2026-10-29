@@ -189,13 +189,19 @@ export function projectTable({ teams, standings, fixtures, predictions = {} }) {
   return { rows, decided, total: fixtures.length };
 }
 
-/** Palpite aleatório para todos os jogos sem resultado definido. */
-export function randomPredictions(fixtures, existing = {}, rand = Math.random) {
+/**
+ * Preenche com um mesmo resultado todos os jogos que ainda não têm palpite,
+ * preservando os que já foram definidos à mão.
+ *
+ * Um resultado fixo é preferível a um sorteio para demonstrar o simulador:
+ * "vitória do mandante em todo jogo" é um cenário que a pessoa consegue
+ * anunciar antes de clicar e conferir depois, enquanto um sorteio dá uma
+ * tabela diferente a cada vez e não se pode conferir contra nada.
+ */
+export function fillRemaining(fixtures, existing = {}, outcome = OUTCOME.HOME) {
   const out = { ...existing };
   for (const fixture of fixtures) {
-    if (out[fixture.id]) continue;
-    const roll = rand();
-    out[fixture.id] = roll < 0.42 ? OUTCOME.HOME : roll < 0.70 ? OUTCOME.DRAW : OUTCOME.AWAY;
+    if (!out[fixture.id]) out[fixture.id] = outcome;
   }
   return out;
 }

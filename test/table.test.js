@@ -14,7 +14,7 @@ import {
   nextResult,
   outcomeFromTeamResult,
   projectTable,
-  randomPredictions,
+  fillRemaining,
   resultForTeam,
   sanitizePredictions,
 } from '../public/shared/table.js';
@@ -24,10 +24,14 @@ const project = (predictions) =>
 
 const find = (rows, id) => rows.find((r) => r.teamId === id);
 
-/** Gerador determinístico, para o teste não depender de Math.random. */
-function seeded(seed = 1) {
-  let s = seed;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+/**
+ * Palpites variados e determinísticos: alterna vitória do mandante, empate e
+ * vitória do visitante. Exercita os três resultados sem depender de sorteio,
+ * então uma falha aqui é sempre reproduzível.
+ */
+function mixed(fixtures) {
+  const cycle = [OUTCOME.HOME, OUTCOME.DRAW, OUTCOME.AWAY];
+  return Object.fromEntries(fixtures.map((f, i) => [f.id, cycle[i % 3]]));
 }
 
 test('sem palpites, a projeção reproduz a classificação de hoje', () => {
@@ -95,7 +99,7 @@ test('o mesmo jogo nunca dá dois resultados contraditórios', () => {
 });
 
 test('com todos os jogos palpitados, todo clube chega a 38 jogos', () => {
-  const { rows, decided, total } = project(randomPredictions(FIXTURES, {}, seeded(42)));
+  const { rows, decided, total } = project(mixed(FIXTURES));
   assert.equal(decided, total);
 
   for (const row of rows) {
@@ -114,7 +118,7 @@ test('com todos os jogos palpitados, todo clube chega a 38 jogos', () => {
 });
 
 test('as posições vão de 1 a 20, sem repetir', () => {
-  const { rows } = project(randomPredictions(FIXTURES, {}, seeded(7)));
+  const { rows } = project(mixed(FIXTURES));
   assert.deepEqual(
     rows.map((r) => r.position),
     Array.from({ length: 20 }, (_, i) => i + 1),
@@ -188,12 +192,23 @@ test('sanitizePredictions aceita entrada vazia ou nula', () => {
   assert.deepEqual(sanitizePredictions({}, FIXTURES), {});
 });
 
-test('randomPredictions preserva os palpites que já existem', () => {
+test('fillRemaining preserva os palpites que já existem', () => {
+  // O botão só completa o que falta: um palpite feito à mão sobrevive.
   const existing = { 'r33-vasco-flamengo': OUTCOME.AWAY };
-  const filled = randomPredictions(FIXTURES, existing, seeded(3));
+  const filled = fillRemaining(FIXTURES, existing, OUTCOME.HOME);
   assert.equal(filled['r33-vasco-flamengo'], OUTCOME.AWAY);
   assert.equal(Object.keys(filled).length, FIXTURES.length);
   assert.deepEqual(existing, { 'r33-vasco-flamengo': OUTCOME.AWAY }, 'não altera a entrada');
+});
+
+test('fillRemaining com vitória do mandante não gera empate nem derrota fora', () => {
+  const filled = fillRemaining(FIXTURES, {}, OUTCOME.HOME);
+  assert.ok(Object.values(filled).every((o) => o === OUTCOME.HOME));
+
+  const { rows } = project(filled);
+  // Todo mandante vence, então ninguém empata nos jogos que faltavam.
+  const empatesAntes = STANDINGS.reduce((a, r) => a + r.drawn, 0);
+  assert.equal(rows.reduce((a, r) => a + r.drawn, 0), empatesAntes);
 });
 
 test('uma vitória do Vasco no jogo atrasado tira ele do Z-4', () => {

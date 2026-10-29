@@ -15,34 +15,35 @@ import { FIXTURES } from '../data/fixtures.js';
 import { SEASON } from '../data/season.js';
 import { projectTable, sanitizePredictions } from '../../public/shared/table.js';
 
-const SYSTEM_PROMPT = `Você é um analista de futebol brasileiro, direto e sem floreio.
-Recebe a tabela final PROJETADA de um Brasileirão simulado por um torcedor e comenta o cenário.
+const SYSTEM_PROMPT = `You are a Brazilian football analyst: direct, no filler.
+You receive the PROJECTED final table of a Brasileirão scenario a fan has simulated,
+and you comment on it.
 
-Regras:
-- Escreva em português do Brasil, no máximo 4 parágrafos curtos.
-- Fale do título, das vagas na Libertadores e do rebaixamento, nessa ordem.
-- Use os números que recebeu. Nunca invente pontuação, jogo ou resultado.
-- Se algum jogo ainda estiver sem palpite, diga o que ainda está em aberto.
-- Sem listas, sem markdown, sem emoji. Texto corrido.`;
+Rules:
+- Write in English, at most 4 short paragraphs.
+- Cover the title race, the Libertadores places and relegation, in that order.
+- Use only the numbers you were given. Never invent a score, a match or a result.
+- If some matches have no guess yet, say what is still open.
+- No lists, no markdown, no emoji. Plain prose.`;
 
 /** Monta a tabela projetada em texto, do jeito mais legível para o modelo. */
 function renderTable(rows) {
   const lines = rows.map((r) => {
     const zone = ZONES.find((z) => r.position >= z.from && z.to >= r.position);
-    const pending = r.pending > 0 ? `, ${r.pending} jogo(s) sem palpite` : '';
+    const pending = r.pending > 0 ? `, ${r.pending} match(es) with no guess` : '';
     return (
       `${String(r.position).padStart(2)}. ${r.name} — ${r.pts} pts ` +
-      `(${r.won}V ${r.drawn}E ${r.lost}D, saldo ${r.goalDiff >= 0 ? '+' : ''}${r.goalDiff})` +
-      `${zone ? ` [${zone.label}]` : ''}${pending}`
+      `(${r.won}W ${r.drawn}D ${r.lost}L, goal difference ${r.goalDiff >= 0 ? '+' : ''}${r.goalDiff})` +
+      `${zone ? ` [${zone.label}: ${zone.en}]` : ''}${pending}`
     );
   });
   return lines.join('\n');
 }
 
-/** Lista os palpites como "Rodada 33: Vasco 1 x 0 Flamengo (palpite)". */
+/** Lista os palpites como "Round 33: Vasco vs Flamengo — Vasco win". */
 function renderPredictions(predictions) {
   const chosen = FIXTURES.filter((f) => predictions[f.id]);
-  if (chosen.length === 0) return 'Nenhum palpite informado.';
+  if (chosen.length === 0) return 'No guesses given.';
 
   const nameOf = Object.fromEntries(TEAMS.map((t) => [t.id, t.name]));
   return chosen
@@ -51,12 +52,12 @@ function renderPredictions(predictions) {
       const outcome = predictions[f.id];
       const label =
         outcome === 'H'
-          ? `vitória do ${nameOf[f.home]}`
+          ? `${nameOf[f.home]} win`
           : outcome === 'A'
-            ? `vitória do ${nameOf[f.away]}`
-            : 'empate';
-      const round = f.deferred ? `Rodada ${f.round} (atrasado)` : `Rodada ${f.round}`;
-      return `${round}: ${nameOf[f.home]} x ${nameOf[f.away]} — ${label}`;
+            ? `${nameOf[f.away]} win`
+            : 'draw';
+      const round = f.deferred ? `Round ${f.round} (postponed)` : `Round ${f.round}`;
+      return `${round}: ${nameOf[f.home]} vs ${nameOf[f.away]} — ${label}`;
     })
     .join('\n');
 }
@@ -86,15 +87,15 @@ export async function handleAnalyze(request, env) {
       : null;
 
   const userPrompt = [
-    `${SEASON.competition} ${SEASON.year} — cenário simulado.`,
-    `Palpites informados: ${decided} de ${total} jogos restantes.`,
+    `${SEASON.competition} ${SEASON.year} — simulated scenario.`,
+    `Guesses given: ${decided} of ${total} remaining matches.`,
     '',
-    'TABELA FINAL PROJETADA:',
+    'PROJECTED FINAL TABLE:',
     renderTable(rows),
     '',
-    'PALPITES:',
+    'GUESSES:',
     renderPredictions(predictions),
-    question ? `\nPergunta do torcedor: ${question}` : '',
+    question ? `\nThe fan asks: ${question}` : '',
   ]
     .join('\n')
     .trim();
