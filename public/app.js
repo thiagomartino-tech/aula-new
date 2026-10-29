@@ -6,10 +6,11 @@
  * da IA são calculadas pelo mesmo código.
  */
 import {
+  OUTCOME,
   nextResult,
   outcomeFromTeamResult,
   projectTable,
-  randomPredictions,
+  fillRemaining,
   sanitizePredictions,
   RESULT_CYCLE,
 } from '/shared/table.js';
@@ -43,7 +44,7 @@ const el = {
   zoneLegend: document.getElementById('zoneLegend'),
   progressBar: document.getElementById('progressBar'),
   progressLabel: document.getElementById('progressLabel'),
-  randomBtn: document.getElementById('randomBtn'),
+  homeWinBtn: document.getElementById('homeWinBtn'),
   clearBtn: document.getElementById('clearBtn'),
   saveBtn: document.getElementById('saveBtn'),
   analyzeBtn: document.getElementById('analyzeBtn'),
@@ -474,8 +475,9 @@ function initTableEvents() {
 }
 
 function initToolbar() {
-  el.randomBtn.addEventListener('click', () => {
-    state.predictions = randomPredictions(state.fixtures, state.predictions);
+  el.homeWinBtn.addEventListener('click', () => {
+    // Vitória do mandante em todo jogo que ainda não tem palpite.
+    state.predictions = fillRemaining(state.fixtures, state.predictions, OUTCOME.HOME);
     persist();
     render();
   });
@@ -578,7 +580,7 @@ function initAnalysis() {
         ...paragraphs.map((p) => h('p', { text: p })),
         h('p', {
           className: 'legend__at',
-          text: `${result.model} · ${result.decided} de ${result.total} jogos com palpite`,
+          text: `${result.model} · ${result.decided} of ${result.total} matches guessed`,
         }),
       );
     } catch (err) {
