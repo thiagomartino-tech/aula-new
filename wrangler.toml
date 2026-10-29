@@ -21,7 +21,7 @@ enabled = true
 # --- Variáveis públicas (sem segredo) -----------------------------------
 [vars]
 # Modelo usado nas chamadas à NVIDIA LLM API. Trocar aqui não requer segredo.
-NVIDIA_MODEL = "meta/llama-3.3-70b-instruct"
+NVIDIA_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"
 
 # --- Segredos ------------------------------------------------------------
 # NUNCA coloque segredos neste arquivo: ele vai para o git.

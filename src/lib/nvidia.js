@@ -14,7 +14,7 @@
 import { HttpError } from './http.js';
 
 const DEFAULT_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct';
+const DEFAULT_MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
 export function createNvidia(env) {
   if (!env.NVIDIA_API_KEY) return null;
