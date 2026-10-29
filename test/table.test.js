@@ -43,22 +43,25 @@ test('sem palpites, a projeção reproduz a classificação de hoje', () => {
   }
 });
 
-test('a ordem sem palpites bate com a tabela publicada', () => {
+test('a tabela sai ordenada pelos critérios de desempate', () => {
+  // Antes isto fixava a ordem da 32ª rodada, e por isso quebrava a cada
+  // atualização de dados. A propriedade que vale sempre é que nenhuma linha
+  // aparece à frente de outra que deveria vir antes.
   const { rows } = project({});
-  assert.deepEqual(
-    rows.slice(0, 8).map((r) => r.teamId),
-    [
-      'flamengo',
-      'palmeiras',
-      'cruzeiro',      // à frente do Athletico-PR por ter mais vitórias
-      'athletico-pr',
-      'fluminense',
-      'atletico-mg',
-      'bahia',
-      'santos',
-    ],
-  );
-  assert.equal(rows.at(-1).teamId, 'chapecoense');
+  for (let i = 1; i < rows.length; i += 1) {
+    assert.ok(
+      compareRows(rows[i - 1], rows[i]) <= 0,
+      `${rows[i - 1].name} (${rows[i - 1].pts}) não deveria vir antes de ` +
+        `${rows[i].name} (${rows[i].pts})`,
+    );
+  }
+});
+
+test('quem tem mais pontos aparece antes', () => {
+  const { rows } = project({});
+  for (let i = 1; i < rows.length; i += 1) {
+    assert.ok(rows[i - 1].pts >= rows[i].pts, `posição ${i + 1}`);
+  }
 });
 
 test('uma vitória vale 3 pontos para o mandante', () => {
@@ -123,10 +126,15 @@ test('maxPts conta 3 pontos por jogo ainda sem palpite', () => {
   for (const row of rows) {
     assert.equal(row.maxPts, row.pts + row.pending * 3, row.teamId);
   }
-  // Vasco e Chapecoense têm 7 jogos pela frente, os outros 6.
-  assert.equal(find(rows, 'vasco').pending, 7);
-  assert.equal(find(rows, 'chapecoense').pending, 7);
-  assert.equal(find(rows, 'flamengo').pending, 6);
+});
+
+test('os jogos pendentes de cada clube completam os 38 da temporada', () => {
+  // Deriva dos dados em vez de fixar números de uma rodada específica:
+  // quem jogou menos tem mais pela frente, e a soma é sempre 38.
+  const { rows } = project({});
+  for (const row of rows) {
+    assert.equal(row.played + row.pending, 38, row.teamId);
+  }
 });
 
 test('o desempate segue pontos, vitórias, saldo e gols pró', () => {

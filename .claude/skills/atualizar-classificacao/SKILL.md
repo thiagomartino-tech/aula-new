@@ -42,32 +42,62 @@ Fontes se contradizem com frequência, em geral porque uma está defasada em uma
 rodada. Quando divergirem, as invariantes abaixo decidem: a tabela que fecha
 está certa.
 
+## Rodadas vêm pela metade
+
+Uma rodada do Brasileirão se espalha de quarta a sábado. Na prática, o pedido
+quase nunca chega com a rodada inteira pronta — chega com "ontem teve alguns
+jogos".
+
+Isso é normal e o projeto suporta. O que muda:
+
+- lance **só os jogos já disputados** e remova **só esses** de `FIXTURES`;
+- a rodada **continua** em `REMAINING_ROUNDS` enquanto sobrar jogo nela;
+- `LAST_ROUND_PLAYED` só sobe quando a rodada acaba de verdade.
+
+A interface lida sozinha: na coluna daquela rodada, quem já jogou mostra `–`
+e quem não jogou mostra o adversário. O cabeçalho passa a dizer "após a 32ª
+rodada e 5 jogos da 33ª".
+
+Por isso a invariante por rodada é **de 1 a 10 jogos**, não exatamente 10. Uma
+rodada que chega a zero jogos acabou: aí sim ela sai de `REMAINING_ROUNDS` e
+`LAST_ROUND_PLAYED` sobe.
+
 ## O procedimento
 
-Depois que a rodada N é disputada:
+1. **Descubra quais jogos saíram.** Confirme data a data; não presuma que a
+   rodada inteira foi disputada.
 
-1. **Lance os resultados na classificação.** Para cada clube, ajuste `played`,
-   `won`, `drawn`, `lost`, `goalsFor`, `goalsAgainst` e `pts`.
+2. **Lance os resultados na classificação.** Para cada clube envolvido, ajuste
+   `played`, `won`, `drawn`, `lost`, `goalsFor`, `goalsAgainst` e `pts`.
 
-2. **Suba `LAST_ROUND_PLAYED` para N.**
+   Prefira calcular a partir dos placares a editar número por número — é a
+   diferença entre um erro de digitação possível e um impossível:
 
-3. **Tire a rodada N dos jogos restantes.** Remova N de `REMAINING_ROUNDS` e
-   apague os 10 jogos daquela rodada de `FIXTURES`.
+   ```js
+   const RESULTS = [['fluminense', 2, 'internacional', 1], /* ... */];
+   ```
+
+3. **Tire de `FIXTURES` os jogos que acabaram de ser disputados.**
 
    Este passo é o mais fácil de esquecer e o que mais estraga a tabela: os
    jogos continuariam contando como futuros, os clubes passariam de 38 jogos e
    a coluna `Máx` mentiria. O teste pega isso, mas é melhor não chegar lá.
 
-4. **Se o jogo atrasado foi disputado**, lance o resultado e remova a entrada
-   `deferred: true` de `FIXTURES`. A coluna `ATR` some sozinha quando não
-   sobra nenhum.
+4. **Se a rodada acabou**, remova-a de `REMAINING_ROUNDS` e suba
+   `LAST_ROUND_PLAYED`.
 
-5. **Rode os testes**: `npm test`. Eles verificam as invariantes.
+5. **Se o jogo atrasado foi disputado**, lance o resultado e remova a entrada
+   `deferred: true`. A coluna `ATR` some sozinha quando não sobra nenhum.
 
-6. **Regere o seed**: `npm run seed`. O `supabase/seed.sql` é gerado a partir
+6. **Atualize `snapshotDate`** em `src/data/season.js` para a data de hoje; é
+   o que o rodapé mostra.
+
+7. **Rode os testes**: `npm test`. Eles verificam as invariantes.
+
+8. **Regere o seed**: `npm run seed`. O `supabase/seed.sql` é gerado a partir
    de `src/data/`, e o CI falha se ele ficar para trás.
 
-7. **Commit e push.** Se o usuário pedir, abra PR; senão, deixe na branch.
+9. **Commit e push.** Se o usuário pedir, abra PR; senão, deixe na branch.
 
 ## As invariantes que decidem
 
@@ -79,8 +109,9 @@ servem para escolher entre fontes que discordam.
 | `won + drawn + lost = played` | Um resultado lançado na coluna errada |
 | `3 × won + drawn = pts` | Pontuação copiada errada |
 | Soma de `goalsFor` = soma de `goalsAgainst` | Todo gol marcado por alguém foi sofrido por outro |
-| Total de jogos = `(rodadas × 20 − atrasados) ÷ 2` | Rodada esquecida ou contada duas vezes |
-| Cada clube termina com 38 jogos | A rodada não foi removida de `FIXTURES` |
+| Total de jogos = soma de `played` ÷ 2 | Rodada esquecida ou contada duas vezes |
+| Cada clube termina com 38 jogos | O jogo disputado não saiu de `FIXTURES` |
+| Ninguém joga duas vezes na mesma rodada | Jogo lançado na rodada errada |
 
 `npm test` checa todas. `assertStandings()` e `assertFixtures()`, em
 `src/data/`, são as funções que as implementam, e as rotas também as chamam
@@ -108,6 +139,20 @@ Quando um clube tiver `played` menor que os outros, procure o jogo atrasado e
 registre-o em `FIXTURES` com a rodada original e `deferred: true`. É o que
 mantém a conta fechando: sem ele, aquele clube nunca chegaria a 38 jogos e a
 simulação daria pontuação final errada para ele e para o adversário.
+
+## Testes não devem fixar os números do retrato
+
+Um teste que afirma "o Flamengo é o líder" ou "o Vasco tem 7 jogos pela
+frente" quebra na semana seguinte, e o barulho vira ruído que esconde erro de
+verdade.
+
+Se um teste falhar porque os dados mudaram — e não porque estão errados —,
+reescreva-o como propriedade. Em vez de fixar a ordem dos oito primeiros,
+verifique que nenhuma linha vem antes de outra que deveria precedê-la; em vez
+de fixar jogos pendentes, verifique que `played + pending = 38` para todos.
+
+A conferência contra a tabela publicada continua valendo, mas é trabalho de
+atualização — olho no número, uma vez —, não algo para congelar em teste.
 
 ## O que não mexer
 

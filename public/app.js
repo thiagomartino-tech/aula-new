@@ -628,10 +628,23 @@ async function start() {
   }
 
   const { lastRoundPlayed, totalRounds, remainingRounds } = state.meta;
+
+  // Uma rodada se espalha por vários dias, então a primeira que falta pode já
+  // ter alguns jogos lançados na classificação. Dizer só "após a Nª rodada"
+  // nesse caso subestima o que a tabela já mostra.
+  const corrente = remainingRounds[0];
+  const faltamNaCorrente = state.fixtures.filter(
+    (f) => f.round === corrente && !f.deferred,
+  ).length;
+  const jogadosNaCorrente = 10 - faltamNaCorrente;
+
   el.seasonLine.textContent =
     `${state.season.competition} ${state.season.year} · ` +
-    `classificação após a ${lastRoundPlayed}ª rodada · ` +
-    `${remainingRounds.length} rodadas até a ${totalRounds}ª`;
+    `classificação após a ${lastRoundPlayed}ª rodada` +
+    (jogadosNaCorrente > 0
+      ? ` e ${jogadosNaCorrente} ${jogadosNaCorrente === 1 ? 'jogo' : 'jogos'} da ${corrente}ª`
+      : '') +
+    ` · ${remainingRounds.length} rodadas até a ${totalRounds}ª`;
 
   el.sourceLine.textContent =
     state.source.standings === 'supabase'

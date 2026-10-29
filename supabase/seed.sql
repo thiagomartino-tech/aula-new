@@ -34,25 +34,25 @@ on conflict (id) do update set
 insert into public.standings
   (team_id, played, won, drawn, lost, goals_for, goals_against) values
   ('flamengo', 32, 21, 7, 4, 64, 27),
-  ('palmeiras', 32, 20, 9, 3, 56, 22),
+  ('palmeiras', 33, 20, 10, 3, 56, 22),
   ('cruzeiro', 32, 16, 6, 10, 51, 46),
   ('athletico-pr', 32, 15, 9, 8, 50, 38),
-  ('fluminense', 32, 14, 9, 9, 50, 41),
+  ('fluminense', 33, 15, 9, 9, 52, 42),
   ('atletico-mg', 32, 14, 8, 10, 44, 38),
-  ('bahia', 32, 13, 11, 8, 45, 40),
-  ('santos', 32, 12, 10, 10, 49, 47),
-  ('sao-paulo', 32, 12, 7, 13, 37, 36),
-  ('bragantino', 32, 11, 8, 13, 39, 38),
-  ('botafogo', 32, 10, 9, 13, 44, 51),
+  ('bahia', 33, 14, 11, 8, 48, 42),
+  ('santos', 33, 12, 11, 10, 49, 47),
+  ('sao-paulo', 33, 12, 7, 14, 39, 39),
+  ('bragantino', 33, 12, 8, 13, 42, 38),
+  ('botafogo', 33, 10, 9, 14, 45, 53),
   ('coritiba', 32, 10, 9, 13, 38, 50),
   ('vasco', 31, 10, 8, 13, 39, 45),
   ('vitoria', 32, 10, 8, 14, 35, 46),
   ('mirassol', 32, 9, 10, 13, 37, 45),
-  ('internacional', 32, 8, 11, 13, 36, 40),
+  ('internacional', 33, 8, 11, 14, 37, 42),
   ('gremio', 32, 8, 10, 14, 35, 44),
   ('corinthians', 32, 8, 9, 15, 34, 42),
-  ('remo', 32, 5, 11, 16, 34, 50),
-  ('chapecoense', 31, 4, 9, 18, 32, 63)
+  ('remo', 33, 6, 11, 16, 36, 51),
+  ('chapecoense', 32, 4, 9, 19, 32, 66)
 on conflict (team_id) do update set
   played = excluded.played, won = excluded.won, drawn = excluded.drawn,
   lost = excluded.lost, goals_for = excluded.goals_for,
@@ -61,11 +61,6 @@ on conflict (team_id) do update set
 -- Jogos restantes (sem placar: ainda não foram disputados)
 insert into public.fixtures (id, round, home_id, away_id, deferred) values
   ('r21-chapecoense-vasco', 21, 'chapecoense', 'vasco', true),
-  ('r33-fluminense-internacional', 33, 'fluminense', 'internacional', false),
-  ('r33-santos-palmeiras', 33, 'santos', 'palmeiras', false),
-  ('r33-bragantino-chapecoense', 33, 'bragantino', 'chapecoense', false),
-  ('r33-remo-botafogo', 33, 'remo', 'botafogo', false),
-  ('r33-bahia-sao-paulo', 33, 'bahia', 'sao-paulo', false),
   ('r33-atletico-mg-cruzeiro', 33, 'atletico-mg', 'cruzeiro', false),
   ('r33-vasco-flamengo', 33, 'vasco', 'flamengo', false),
   ('r33-gremio-athletico-pr', 33, 'gremio', 'athletico-pr', false),

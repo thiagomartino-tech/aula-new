@@ -45,8 +45,24 @@ test('o total de jogos disputados é par', () => {
   assert.equal(total % 2, 0, 'cada jogo conta para dois clubes');
 });
 
-test('cada rodada restante tem 10 jogos e os 20 clubes', () => {
+test('as rodadas restantes são coerentes e todo clube chega a 38', () => {
   assert.doesNotThrow(() => assertFixtures(FIXTURES, STANDINGS));
+});
+
+test('ninguém joga duas vezes na mesma rodada', () => {
+  for (const round of REMAINING_ROUNDS) {
+    const clubes = FIXTURES.filter((f) => f.round === round)
+      .flatMap((f) => [f.home, f.away]);
+    assert.equal(new Set(clubes).size, clubes.length, `rodada ${round}`);
+  }
+});
+
+test('uma rodada pela metade não tem mais que 10 jogos', () => {
+  // Rodadas se espalham por vários dias, então uma delas pode estar parcial.
+  for (const round of REMAINING_ROUNDS) {
+    const n = FIXTURES.filter((f) => f.round === round).length;
+    assert.ok(n >= 1 && n <= 10, `rodada ${round} tem ${n} jogos`);
+  }
 });
 
 test('todo clube termina a temporada com 38 jogos', () => {
@@ -79,14 +95,19 @@ test('os ids dos jogos são únicos', () => {
 });
 
 test('o jogo atrasado é de uma rodada anterior às que faltam', () => {
+  // Pode não haver nenhum: quando o atrasado for disputado, ele sai daqui.
   const deferred = FIXTURES.filter((f) => f.deferred);
-  assert.equal(deferred.length, 1, 'há exatamente um jogo atrasado');
-  assert.ok(deferred[0].round < REMAINING_ROUNDS[0]);
-
-  // Só os dois clubes com menos jogos disputados podem ter jogo atrasado.
-  const behind = STANDINGS.filter((r) => r.played < 32).map((r) => r.teamId);
-  assert.deepEqual(
-    [deferred[0].home, deferred[0].away].sort(),
-    [...behind].sort(),
-  );
+  for (const game of deferred) {
+    assert.ok(
+      game.round < REMAINING_ROUNDS[0],
+      `jogo atrasado da rodada ${game.round} não é anterior à ${REMAINING_ROUNDS[0]}ª`,
+    );
+    // Quem tem jogo atrasado jogou menos que o clube mais adiantado — é
+    // justamente o que o atrasado existe para compensar.
+    const maisAdiantado = Math.max(...STANDINGS.map((r) => r.played));
+    for (const id of [game.home, game.away]) {
+      const row = STANDINGS.find((r) => r.teamId === id);
+      assert.ok(row.played < maisAdiantado, `${id} não está atrasado em jogos`);
+    }
+  }
 });
