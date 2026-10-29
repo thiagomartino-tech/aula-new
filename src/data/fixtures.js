@@ -27,12 +27,9 @@ export const FIXTURES = [
   // Arena Condá; a CBF ainda não divulgou a data, prevista para novembro.
   { round: 21, deferred: true, date: null, home: 'chapecoense', away: 'vasco' },
 
-  // --- 33ª rodada ---------------------------------------------------------
-  { round: 33, home: 'fluminense',   away: 'internacional' },
-  { round: 33, home: 'santos',       away: 'palmeiras' },
-  { round: 33, home: 'bragantino',   away: 'chapecoense' },
-  { round: 33, home: 'remo',         away: 'botafogo' },
-  { round: 33, home: 'bahia',        away: 'sao-paulo' },
+  // --- 33ª rodada (parcial) -----------------------------------------------
+  // Os 5 jogos de 28/10 já foram disputados e saíram daqui: estão lançados
+  // em standings.js. Os que restam são de 29 a 31/10.
   { round: 33, home: 'atletico-mg',  away: 'cruzeiro' },
   { round: 33, home: 'vasco',        away: 'flamengo' },
   { round: 33, home: 'gremio',       away: 'athletico-pr' },
@@ -119,18 +116,23 @@ export function fixturesForRound(round) {
 export function assertFixtures(fixtures = FIXTURES, standings) {
   for (const round of REMAINING_ROUNDS) {
     const games = fixtures.filter((f) => f.round === round);
-    if (games.length !== 10) {
-      throw new Error(`Rodada ${round}: ${games.length} jogos, esperado 10`);
+
+    // Uma rodada se espalha por vários dias, então pode estar pela metade: os
+    // jogos já disputados saem daqui e entram na classificação. Por isso o
+    // que se exige é de 1 a 10 jogos, não exatamente 10. Uma rodada que
+    // chegou a zero saiu inteira e deve sair também de REMAINING_ROUNDS,
+    // senão a tabela mostra uma coluna vazia.
+    if (games.length === 0 || games.length > 10) {
+      throw new Error(`Rodada ${round}: ${games.length} jogos, esperado de 1 a 10`);
     }
+
+    // O que nunca muda: ninguém joga duas vezes na mesma rodada.
     const seen = new Set();
     for (const g of games) {
       for (const id of [g.home, g.away]) {
         if (seen.has(id)) throw new Error(`Rodada ${round}: ${id} aparece 2x`);
         seen.add(id);
       }
-    }
-    if (seen.size !== 20) {
-      throw new Error(`Rodada ${round}: ${seen.size} clubes, esperado 20`);
     }
   }
 
