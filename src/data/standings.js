@@ -39,15 +39,22 @@ export const STANDINGS = [
 ];
 
 /**
- * Faixas de classificação. Em 2026 o número exato de vagas na Libertadores
- * ainda depende dos campeões da Libertadores e da Copa do Brasil, então as
- * faixas abaixo são a divisão convencional e aproximada da tabela.
+ * Faixas de classificação, com a explicação em inglês que a interface mostra
+ * abaixo de cada rótulo — o público da apresentação não acompanha o futebol
+ * brasileiro e precisa saber o que cada faixa significa.
+ *
+ * As vagas de Libertadores entram como uma faixa só, de 1º a 6º: o número que
+ * vai direto à fase de grupos e o que passa pela prévia muda conforme os
+ * campeões da Libertadores e da Copa do Brasil, e essa distinção não ajuda
+ * quem está vendo a tabela pela primeira vez.
  */
 export const ZONES = [
-  { from: 1,  to: 4,  id: 'libertadores',     label: 'Libertadores (fase de grupos)' },
-  { from: 5,  to: 6,  id: 'libertadores-pre', label: 'Libertadores (fase prévia)' },
-  { from: 7,  to: 12, id: 'sulamericana',     label: 'Sul-Americana' },
-  { from: 17, to: 20, id: 'rebaixamento',     label: 'Rebaixamento (Z-4)' },
+  { from: 1,  to: 6,  id: 'libertadores', label: 'Libertadores',
+    en: 'top continental cup' },
+  { from: 7,  to: 12, id: 'sulamericana', label: 'Sul-Americana',
+    en: 'second continental cup' },
+  { from: 17, to: 20, id: 'rebaixamento', label: 'Rebaixamento',
+    en: 'relegated to the second division' },
 ];
 
 export function zoneForPosition(position) {

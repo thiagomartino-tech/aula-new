@@ -39,26 +39,25 @@
         <p class="toolbar__count" id="progressLabel">0 de 0 jogos simulados</p>
       </div>
       <div class="toolbar__actions">
-        <button type="button" class="btn" id="randomBtn">Sortear o que falta</button>
-        <button type="button" class="btn" id="clearBtn">Limpar palpites</button>
-        <button type="button" class="btn" id="saveBtn" hidden>Salvar e compartilhar</button>
-        <button type="button" class="btn btn--primary" id="analyzeBtn" hidden>Analisar com IA</button>
+        <button type="button" class="btn" id="randomBtn"><span class="btn__pt">Sortear o que falta</span><span class="en">Fill the rest at random</span></button>
+        <button type="button" class="btn" id="clearBtn"><span class="btn__pt">Limpar palpites</span><span class="en">Clear all guesses</span></button>
+        <button type="button" class="btn" id="saveBtn" hidden><span class="btn__pt">Salvar e compartilhar</span><span class="en">Save and share</span></button>
+        <button type="button" class="btn btn--primary" id="analyzeBtn" hidden><span class="btn__pt">Analisar com IA</span><span class="en">Analyse with AI</span></button>
       </div>
     </section>
 
     <!-- Legenda -->
     <section class="legend" aria-label="Legenda">
       <p class="legend__hint">
-        Clique na célula de uma rodada para alternar
-        <strong>vitória → empate → derrota → sem palpite</strong>.
-        O jogo do adversário muda junto. <kbd>Shift</kbd> + clique volta.
+        Click a round cell to cycle <strong>win → draw → loss → no guess</strong>.
+        The opponent's cell changes with it. <kbd>Shift</kbd> + click goes back.
       </p>
       <ul class="legend__items">
-        <li><span class="chip chip--win">V</span> vitória</li>
-        <li><span class="chip chip--draw">E</span> empate</li>
-        <li><span class="chip chip--loss">D</span> derrota</li>
-        <li><span class="chip chip--none">—</span> sem palpite</li>
-        <li><span class="legend__at">@SAN</span> jogo fora de casa</li>
+        <li><span class="chip chip--win">V</span> <span class="legend__pair">vitória<span class="en">win</span></span></li>
+        <li><span class="chip chip--draw">E</span> <span class="legend__pair">empate<span class="en">draw</span></span></li>
+        <li><span class="chip chip--loss">D</span> <span class="legend__pair">derrota<span class="en">loss</span></span></li>
+        <li><span class="chip chip--none">—</span> <span class="legend__pair">sem palpite<span class="en">no guess</span></span></li>
+        <li><span class="legend__at">@SAN</span> <span class="legend__pair">jogo fora de casa<span class="en">away match</span></span></li>
       </ul>
       <ul class="legend__zones" id="zoneLegend"></ul>
     </section>
@@ -78,23 +77,23 @@
 
     <!-- Painel de IA -->
     <section class="panel" id="analysisPanel" hidden aria-labelledby="analysisTitle">
-      <h2 id="analysisTitle">Análise do cenário</h2>
+      <h2 id="analysisTitle">Scenario analysis</h2>
       <form id="analysisForm" class="panel__form">
-        <label class="sr-only" for="analysisQuestion">Pergunta opcional</label>
+        <label class="sr-only" for="analysisQuestion">Optional question</label>
         <input
           type="text"
           id="analysisQuestion"
           class="input"
           maxlength="500"
-          placeholder="Pergunta opcional: &quot;o Corinthians escapa?&quot;">
-        <button type="submit" class="btn btn--primary" id="analysisSubmit">Analisar</button>
+          placeholder="Optional question: &quot;does Corinthians survive?&quot;">
+        <button type="submit" class="btn btn--primary" id="analysisSubmit">Analyse</button>
       </form>
       <div class="panel__body" id="analysisBody"></div>
     </section>
 
     <!-- Painel de salvar -->
     <section class="panel" id="savePanel" hidden aria-labelledby="saveTitle">
-      <h2 id="saveTitle">Simulação salva</h2>
+      <h2 id="saveTitle">Simulação salva<span class="en">Saved simulation</span></h2>
       <div class="panel__body" id="saveBody"></div>
     </section>
 
@@ -106,6 +105,8 @@
   <p>
     Pontos corridos, 38 rodadas. Critérios de desempate aplicados: pontos,
     vitórias, saldo de gols e gols pró.
+    <span class="en">Double round-robin, 38 rounds. Ties broken by points, then
+    wins, then goal difference, then goals scored.</span>
   </p>
 </footer>
 
