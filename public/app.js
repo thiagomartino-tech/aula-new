@@ -350,9 +350,12 @@ function renderZoneLegend() {
     ...state.zones.map((zone) =>
       h('li', {}, [
         h('span', { className: `zone-dot zone-dot--${zone.id}`, 'aria-hidden': true }),
-        h('span', {
-          text: `${zone.label} (${zone.from}º${zone.to !== zone.from ? `–${zone.to}º` : ''})`,
-        }),
+        h('span', { className: 'legend__pair' }, [
+          h('span', {
+            text: `${zone.label} (${zone.from}º${zone.to !== zone.from ? `–${zone.to}º` : ''})`,
+          }),
+          zone.en ? h('span', { className: 'en', text: zone.en }) : null,
+        ]),
       ]),
     ),
   );
@@ -372,18 +375,34 @@ function render() {
 
   const pct = total ? Math.round((decided / total) * 100) : 0;
   el.progressBar.style.width = `${pct}%`;
-  el.progressLabel.textContent = `${decided} de ${total} jogos simulados`;
+  el.progressLabel.replaceChildren(
+    document.createTextNode(`${decided} de ${total} jogos simulados`),
+    h('span', { className: 'en', text: `${decided} of ${total} matches guessed` }),
+  );
 
   el.clearBtn.disabled = decided === 0;
   el.saveBtn.disabled = decided === 0;
 
-  const pendingNote =
+  const pendingPt =
     decided < total
-      ? ` Jogos sem palpite valem 0 ponto, por isso a coluna Máx mostra o teto de cada clube.`
+      ? ' Jogos sem palpite valem 0 ponto, por isso a coluna Máx mostra o teto de cada clube.'
       : '';
-  el.tableNote.textContent =
-    'Jogos simulados entram como 1 a 0 para o vencedor e 0 a 0 no empate, ' +
-    'só para o saldo de gols poder desempatar.' + pendingNote;
+  const pendingEn =
+    decided < total
+      ? ' A match with no guess scores nothing, so the Máx column shows each club\u2019s ceiling.'
+      : '';
+  el.tableNote.replaceChildren(
+    document.createTextNode(
+      'Jogos simulados entram como 1 a 0 para o vencedor e 0 a 0 no empate, ' +
+      'só para o saldo de gols poder desempatar.' + pendingPt,
+    ),
+    h('span', {
+      className: 'en',
+      text:
+        'A guessed match counts as 1-0 to the winner and 0-0 for a draw, just so ' +
+        'goal difference can break ties.' + pendingEn,
+    }),
+  );
 }
 
 /* --------------------------------------------------------------- interação */
@@ -638,19 +657,45 @@ async function start() {
   ).length;
   const jogadosNaCorrente = 10 - faltamNaCorrente;
 
-  el.seasonLine.textContent =
-    `${state.season.competition} ${state.season.year} · ` +
-    `classificação após a ${lastRoundPlayed}ª rodada` +
-    (jogadosNaCorrente > 0
+  const parcialPt =
+    jogadosNaCorrente > 0
       ? ` e ${jogadosNaCorrente} ${jogadosNaCorrente === 1 ? 'jogo' : 'jogos'} da ${corrente}ª`
-      : '') +
-    ` · ${remainingRounds.length} rodadas até a ${totalRounds}ª`;
+      : '';
+  const parcialEn =
+    jogadosNaCorrente > 0
+      ? ` plus ${jogadosNaCorrente} ${jogadosNaCorrente === 1 ? 'match' : 'matches'} of round ${corrente}`
+      : '';
 
-  el.sourceLine.textContent =
-    state.source.standings === 'supabase'
-      ? 'Classificação lida do Supabase.'
-      : `Classificação coletada em ${new Date(state.season.snapshotDate + 'T12:00:00Z')
-          .toLocaleDateString('pt-BR')} e embutida na aplicação.`;
+  el.seasonLine.replaceChildren(
+    document.createTextNode(
+      `${state.season.competition} ${state.season.year} · ` +
+      `classificação após a ${lastRoundPlayed}ª rodada${parcialPt} · ` +
+      `${remainingRounds.length} rodadas até a ${totalRounds}ª`,
+    ),
+    h('span', {
+      className: 'en',
+      text:
+        `Brazilian league, ${state.season.year} · ` +
+        `table after round ${lastRoundPlayed}${parcialEn} · ` +
+        `${remainingRounds.length} rounds to go`,
+    }),
+  );
+
+  const coletada = new Date(state.season.snapshotDate + 'T12:00:00Z');
+  el.sourceLine.replaceChildren(
+    document.createTextNode(
+      state.source.standings === 'supabase'
+        ? 'Classificação lida do Supabase.'
+        : `Classificação coletada em ${coletada.toLocaleDateString('pt-BR')} e embutida na aplicação.`,
+    ),
+    h('span', {
+      className: 'en',
+      text:
+        state.source.standings === 'supabase'
+          ? 'Table read from Supabase.'
+          : `Table collected on ${coletada.toLocaleDateString('en-GB')} and bundled with the app.`,
+    }),
+  );
 
   renderZoneLegend();
   initTableEvents();

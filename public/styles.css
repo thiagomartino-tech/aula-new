@@ -26,7 +26,6 @@
   --loss-bg: #fadee0;
 
   --zone-libertadores: #1f7ae0;
-  --zone-libertadores-pre: #5fa8f0;
   --zone-sulamericana: #11a06a;
   --zone-rebaixamento: #d93b47;
 
@@ -268,7 +267,9 @@ kbd {
   color: var(--text-muted);
 }
 .legend__items li,
-.legend__zones li { display: flex; align-items: center; gap: 6px; }
+.legend__zones li { display: flex; align-items: flex-start; gap: 6px; }
+.legend__items li .chip,
+.legend__zones li .zone-dot { margin-top: 2px; }
 
 .legend__at {
   font-family: var(--mono);
@@ -295,9 +296,39 @@ kbd {
   flex: none;
 }
 .zone-dot--libertadores     { background: var(--zone-libertadores); }
-.zone-dot--libertadores-pre { background: var(--zone-libertadores-pre); }
 .zone-dot--sulamericana     { background: var(--zone-sulamericana); }
 .zone-dot--rebaixamento     { background: var(--zone-rebaixamento); }
+
+/* --- Camada em inglês ---------------------------------------------------
+   O público da apresentação não lê português, então cada frase traz a versão
+   em inglês logo abaixo: menor, em itálico e em tom secundário, para apoiar
+   sem competir com o texto principal. */
+
+.en {
+  display: block;
+  font-size: 0.82em;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-faint);
+  line-height: 1.35;
+  margin-top: 1px;
+}
+
+/* Dentro da legenda, o par português/inglês fica numa coluna só. */
+.legend__pair { display: inline-block; vertical-align: top; }
+
+/* Nos botões o par precisa empilhar e continuar centralizado. */
+.btn { line-height: 1.25; }
+.btn .btn__pt { display: block; }
+.btn .en { color: inherit; opacity: 0.72; }
+.btn--primary .en { opacity: 0.85; }
+
+/* A instrução de clique é apoio, não conteúdo: fica miúda de propósito. */
+.legend__hint {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.legend__hint strong { color: var(--text-muted); font-weight: 600; }
 
 /* --- Tabela ------------------------------------------------------------- */
 
@@ -377,7 +408,6 @@ tbody tr:hover .col-pos, tbody tr:hover .col-team { background: var(--surface-2)
   background: transparent;
 }
 tr[data-zone="libertadores"]     .pos::before { background: var(--zone-libertadores); }
-tr[data-zone="libertadores-pre"] .pos::before { background: var(--zone-libertadores-pre); }
 tr[data-zone="sulamericana"]     .pos::before { background: var(--zone-sulamericana); }
 tr[data-zone="rebaixamento"]     .pos::before { background: var(--zone-rebaixamento); }
 
