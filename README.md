@@ -178,3 +178,51 @@ ESPN). Os números foram conferidos por consistência interna, e os testes em
 e lembre que a própria CBF avisa que dias e horários das rodadas ainda podem
 mudar. Para atualizar, mexa só em `src/data/` — `npm test` acusa se algo não
 fechar.
+
+## Próximo passo: agente de previsão
+
+Hoje os palpites são do usuário: ele clica célula por célula, ou usa o botão que
+põe vitória do mandante em todos os jogos. O passo seguinte é um **agente que
+propõe os 56 palpites**, e o usuário corrige o que discordar.
+
+Por que isso é um agente e não mais uma chamada ao modelo: o trabalho tem várias
+etapas e uma delas é buscar informação que o projeto não tem. O agente planeja,
+usa ferramentas, junta o que achou e só então responde — diferente de
+`POST /api/analyze`, que é um prompt só, com tudo pronto na mão.
+
+Entradas pretendidas, por jogo:
+
+- **posição e campanha na tabela** — já existe em `src/data/standings.js`;
+- **mando de campo** — já existe em `src/data/fixtures.js`;
+- **desempenho nos últimos 3 jogos** — *não existe no projeto*, veja abaixo;
+- **contexto da imprensa** — desfalques, troca de técnico, time que já garantiu
+  vaga e vai poupar.
+
+Saída: o mesmo formato que o usuário produz clicando — `H`, `D` ou `A` por jogo,
+mais uma linha de justificativa e a fonte. Como o palpite é guardado por partida
+e o cálculo vive em `public/shared/table.js`, a sugestão do agente cai direto no
+motor que já existe: nada no cálculo da tabela precisa mudar.
+
+### O que falta antes de construir
+
+**Falta o histórico jogo a jogo.** `standings.js` guarda só o acumulado
+(J, V, E, D, GP, GC). Não dá para derivar "os últimos 3 jogos" de um acumulado.
+Seria preciso uma tabela nova — `results`, com uma linha por partida disputada —
+e ela também serviria para recalcular a classificação em vez de digitá-la.
+
+**Falta acesso à rede.** O domínio do ge.globo.com está bloqueado no ambiente
+onde o projeto é desenvolvido (veja "Fonte dos dados"). O Worker publicado não
+tem esse bloqueio, mas o agente precisa de uma fonte estável e permitida.
+
+### Como saber se o agente presta
+
+Duas medidas, e as duas são baratas:
+
+1. **Linha de base.** Mando de campo acerta sozinho boa parte dos jogos do
+   Brasileirão. O botão "Simula Home Win" já é essa linha de base. Um agente que
+   não supera ela não está agregando nada — está só gastando token com estilo.
+2. **Teste retroativo.** Rodar o agente sobre uma rodada **já disputada**,
+   escondendo o resultado, e contar os acertos. Dá para repetir isso em várias
+   rodadas passadas e ter um número em vez de uma impressão.
+
+Sem essas duas, não há como distinguir previsão de chute bem escrito.
