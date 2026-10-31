@@ -33,6 +33,26 @@ como **1 a 0** para o vencedor e **0 a 0** no empate — o suficiente para o
 saldo de gols funcionar como critério de desempate. Os critérios aplicados são
 os do regulamento, na ordem: pontos, vitórias, saldo de gols e gols pró.
 
+### Faixas e o botão "Cenário perfeito"
+
+As cores da tabela seguem a regra de 2026 da CBF: **1º a 4º** vão direto à fase
+de grupos da Libertadores, o **5º** vai à fase prévia, e o **6º ao 11º** vão à
+Sul-Americana (o G6 acabou porque a Copa do Brasil passou a dar 2 vagas). Os
+tamanhos vêm de `ZONES`, em `src/data/standings.js`.
+
+O botão **Cenário perfeito** liga um cenário em que Palmeiras é campeão da
+Libertadores e da Copa do Brasil, e Atlético-MG é campeão da Sul-Americana e
+vice da Copa do Brasil. Nesse cenário o Brasil tem 9 vagas, e os dois clubes não
+ocupam vaga da tabela (marcados com ★): as faixas descem para quem vem atrás.
+O cálculo está em `public/shared/qualification.js`, que o navegador e o Worker
+importam, e os testes em `test/qualification.test.js` conferem que o total fecha
+em 9 clubes onde quer que os dois clubes terminem.
+
+As regras de herança de vagas estão no comentário do arquivo. **Elas vêm de
+reportagens, não do texto do regulamento** — confira no site da CBF antes de
+tratar o resultado como definitivo. Não está modelado o clube que se classifica
+por título e cai para a Série B.
+
 ## Rodando
 
 ```bash
@@ -85,7 +105,7 @@ servidor, então a tabela que você vê e a que a IA recebe nunca divergem.
 | --- | --- |
 | `GET /api/health` | Diz quais integrações estão configuradas |
 | `GET /api/bootstrap` | Clubes, classificação, jogos restantes e faixas da tabela |
-| `POST /api/analyze` | Manda o cenário simulado para a NVIDIA LLM API |
+| `POST /api/analyze` | Manda o cenário simulado para a NVIDIA LLM API. Aceita `scenario: "perfect"` para analisar com o cenário de vagas ligado |
 | `POST /api/chat` | Chat genérico com a NVIDIA, sem nada do Brasileirão |
 | `POST /api/simulations` | Salva a simulação e devolve um id curto |
 | `GET /api/simulations/:id` | Carrega uma simulação salva |

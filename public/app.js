@@ -14,6 +14,7 @@ import {
   sanitizePredictions,
   RESULT_CYCLE,
 } from '/shared/table.js';
+import { classify, SCENARIOS } from '/shared/qualification.js';
 
 const STORAGE_KEY = 'brasileirao-2026:predictions';
 const THEME_KEY = 'brasileirao-2026:theme';
@@ -24,6 +25,10 @@ const state = {
   standings: [],
   fixtures: [],
   zones: [],
+  // Cenário de vagas ligado pelo botão (chave de SCENARIOS) ou null.
+  scenario: null,
+  // Faixa de cada clube na tabela de agora: teamId -> { zone, viaTitle }.
+  classes: new Map(),
   meta: null,
   season: null,
   source: null,
@@ -45,6 +50,7 @@ const el = {
   progressBar: document.getElementById('progressBar'),
   progressLabel: document.getElementById('progressLabel'),
   homeWinBtn: document.getElementById('homeWinBtn'),
+  perfectBtn: document.getElementById('perfectBtn'),
   clearBtn: document.getElementById('clearBtn'),
   saveBtn: document.getElementById('saveBtn'),
   analyzeBtn: document.getElementById('analyzeBtn'),
@@ -289,9 +295,7 @@ function renderMatchCell(game, row, isFirst) {
 }
 
 function renderRow(row) {
-  const zone = state.zones.find(
-    (z) => row.position >= z.from && row.position <= z.to,
-  );
+  const cls = state.classes.get(row.teamId) ?? { zone: null, viaTitle: false };
 
   const change =
     row.change > 0
@@ -300,7 +304,11 @@ function renderRow(row) {
         ? { cls: 'down', text: `▼${-row.change}` }
         : { cls: 'same', text: '·' };
 
-  const tr = h('tr', { 'data-zone': zone?.id, 'data-team': row.teamId });
+  const tr = h('tr', {
+    'data-zone': cls.zone,
+    'data-team': row.teamId,
+    'data-title': cls.viaTitle,
+  });
 
   tr.append(
     h('th', { className: 'col-pos', scope: 'row' }, [
@@ -324,6 +332,15 @@ function renderRow(row) {
           'aria-hidden': true,
         }),
         h('span', { className: 'team__name', text: row.name }),
+        cls.viaTitle
+          ? h('span', {
+              className: 'team__title',
+              text: '★',
+              title: 'Vaga garantida por título, não pela tabela',
+              role: 'img',
+              'aria-label': 'Vaga garantida por título',
+            })
+          : null,
         h('span', { className: 'team__abbr', text: row.abbr, 'aria-hidden': true }),
       ]),
     ]),
@@ -347,22 +364,41 @@ function renderRow(row) {
 }
 
 function renderZoneLegend() {
-  el.zoneLegend.replaceChildren(
-    ...state.zones.map((zone) =>
+  // No cenário as faixas deixam de ser posições seguidas (quem tem título é
+  // pulado), então a legenda conta clubes em vez de dizer "do 1º ao 4º".
+  const count = (id) =>
+    [...state.classes.values()].filter((c) => c.zone === id).length;
+  const range = (zone) =>
+    state.scenario && zone.id !== 'rebaixamento'
+      ? `${count(zone.id)} clubes`
+      : `${zone.from}º${zone.to !== zone.from ? `–${zone.to}º` : ''}`;
+
+  const items = state.zones.map((zone) =>
+    h('li', {}, [
+      h('span', { className: `zone-dot zone-dot--${zone.id}`, 'aria-hidden': true }),
+      h('span', { className: 'legend__pair' }, [
+        h('span', { text: `${zone.label} (${range(zone)})` }),
+        zone.en ? h('span', { className: 'en', text: zone.en }) : null,
+      ]),
+    ]),
+  );
+
+  if (state.scenario) {
+    items.splice(
+      1,
+      0,
       h('li', {}, [
-        h('span', { className: `zone-dot zone-dot--${zone.id}`, 'aria-hidden': true }),
+        h('span', { className: 'zone-dot zone-dot--title', text: '★', 'aria-hidden': true }),
         h('span', { className: 'legend__pair' }, [
-          h('span', {
-            text: `${zone.label} (${zone.from}º${zone.to !== zone.from ? `–${zone.to}º` : ''})`,
-          }),
-          zone.en ? h('span', { className: 'en', text: zone.en }) : null,
+          h('span', { text: 'Vaga por título' }),
+          h('span', { className: 'en', text: 'qualified by a cup win, not by the table' }),
         ]),
       ]),
-    ),
-  );
+    );
+  }
+  el.zoneLegend.replaceChildren(...items);
 }
 
-/** Recalcula a projeção e redesenha a tabela. */
 function render() {
   const { rows, decided, total } = projectTable({
     teams: state.teams,
@@ -371,6 +407,12 @@ function render() {
     predictions: state.predictions,
   });
 
+  state.classes = classify(
+    rows,
+    state.zones,
+    state.scenario ? SCENARIOS[state.scenario] : null,
+  );
+  renderZoneLegend();
   renderHead();
   el.tableBody.replaceChildren(...rows.map(renderRow));
 
@@ -392,16 +434,27 @@ function render() {
     decided < total
       ? ' A match with no guess scores nothing, so the Máx column shows each club\u2019s ceiling.'
       : '';
+  const scenarioPt = state.scenario
+    ? ' Cenário perfeito: Palmeiras campeão da Libertadores e da Copa do Brasil; ' +
+      'Atlético-MG campeão da Sul-Americana e vice da Copa do Brasil. O Brasil ' +
+      'passa a ter 9 vagas, e os dois clubes não ocupam vaga da tabela: ' +
+      'as faixas descem para quem vem atrás.'
+    : '';
+  const scenarioEn = state.scenario
+    ? ` Perfect scenario: ${SCENARIOS[state.scenario].summary}. Brazil gets 9 ` +
+      'Libertadores places and those two clubs do not use a table place, so ' +
+      'every band moves down to the clubs behind them.'
+    : '';
   el.tableNote.replaceChildren(
     document.createTextNode(
       'Jogos simulados entram como 1 a 0 para o vencedor e 0 a 0 no empate, ' +
-      'só para o saldo de gols poder desempatar.' + pendingPt,
+      'só para o saldo de gols poder desempatar.' + pendingPt + scenarioPt,
     ),
     h('span', {
       className: 'en',
       text:
         'A guessed match counts as 1-0 to the winner and 0-0 for a draw, just so ' +
-        'goal difference can break ties.' + pendingEn,
+        'goal difference can break ties.' + pendingEn + scenarioEn,
     }),
   );
 }
@@ -479,6 +532,12 @@ function initToolbar() {
     // Vitória do mandante em todo jogo que ainda não tem palpite.
     state.predictions = fillRemaining(state.fixtures, state.predictions, OUTCOME.HOME);
     persist();
+    render();
+  });
+
+  el.perfectBtn.addEventListener('click', () => {
+    state.scenario = state.scenario ? null : 'perfect';
+    el.perfectBtn.setAttribute('aria-pressed', String(Boolean(state.scenario)));
     render();
   });
 
@@ -566,6 +625,7 @@ function initAnalysis() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           predictions: state.predictions,
+          scenario: state.scenario ?? undefined,
           question: el.analysisQuestion.value || undefined,
         }),
       });
@@ -699,7 +759,6 @@ async function start() {
     }),
   );
 
-  renderZoneLegend();
   initTableEvents();
   initToolbar();
   initSave();

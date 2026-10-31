@@ -26,6 +26,8 @@
   --loss-bg: #fadee0;
 
   --zone-libertadores: #1f7ae0;
+  --zone-libertadores-pre: #5fa8f0;
+  --zone-title: #b7791f;
   --zone-sulamericana: #11a06a;
   --zone-rebaixamento: #d93b47;
 
@@ -225,6 +227,11 @@ main {
 }
 .btn:hover:not(:disabled) { background: var(--surface-3); }
 .btn:disabled { opacity: 0.5; cursor: progress; }
+.btn[aria-pressed="true"],
+.btn[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-text);
+}
+.team__title { color: var(--zone-title); margin-left: 4px; font-size: 0.9em; cursor: help; }
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);
@@ -296,6 +303,11 @@ kbd {
   flex: none;
 }
 .zone-dot--libertadores     { background: var(--zone-libertadores); }
+.zone-dot--libertadores-pre { background: var(--zone-libertadores-pre); }
+.zone-dot--title {
+  background: none; color: var(--zone-title); width: auto; height: auto;
+  font-size: 14px; line-height: 1;
+}
 .zone-dot--sulamericana     { background: var(--zone-sulamericana); }
 .zone-dot--rebaixamento     { background: var(--zone-rebaixamento); }
 
@@ -408,6 +420,7 @@ tbody tr:hover .col-pos, tbody tr:hover .col-team { background: var(--surface-2)
   background: transparent;
 }
 tr[data-zone="libertadores"]     .pos::before { background: var(--zone-libertadores); }
+tr[data-zone="libertadores-pre"] .pos::before { background: var(--zone-libertadores-pre); }
 tr[data-zone="sulamericana"]     .pos::before { background: var(--zone-sulamericana); }
 tr[data-zone="rebaixamento"]     .pos::before { background: var(--zone-rebaixamento); }
 
