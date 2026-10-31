@@ -14,7 +14,13 @@ import {
   sanitizePredictions,
   RESULT_CYCLE,
 } from '/shared/table.js';
-import { classify, SCENARIOS } from '/shared/qualification.js';
+import {
+  SCENARIOS,
+  TITLE_KEYS,
+  classify,
+  describeTitles,
+  sanitizeTitles,
+} from '/shared/qualification.js';
 
 const STORAGE_KEY = 'brasileirao-2026:predictions';
 const THEME_KEY = 'brasileirao-2026:theme';
@@ -25,8 +31,9 @@ const state = {
   standings: [],
   fixtures: [],
   zones: [],
-  // Cenário de vagas ligado pelo botão (chave de SCENARIOS) ou null.
-  scenario: null,
+  // Quem ganha as outras copas, escolhido nos seletores ou pelo atalho do
+  // botão "Cenário perfeito". Valores são ids de clube ou null.
+  titles: { libertadores: null, sulamericana: null, copaChampion: null, copaRunnerUp: null },
   // Faixa de cada clube na tabela de agora: teamId -> { zone, viaTitle }.
   classes: new Map(),
   meta: null,
@@ -51,6 +58,9 @@ const el = {
   progressLabel: document.getElementById('progressLabel'),
   homeWinBtn: document.getElementById('homeWinBtn'),
   perfectBtn: document.getElementById('perfectBtn'),
+  scenarioPanel: document.getElementById('scenarioPanel'),
+  scenarioFields: document.getElementById('scenarioFields'),
+  scenarioCount: document.getElementById('scenarioCount'),
   clearBtn: document.getElementById('clearBtn'),
   saveBtn: document.getElementById('saveBtn'),
   analyzeBtn: document.getElementById('analyzeBtn'),
@@ -294,6 +304,11 @@ function renderMatchCell(game, row, isFirst) {
   return td;
 }
 
+/** Títulos válidos escolhidos agora, ou null quando a tabela está pura. */
+function activeTitles() {
+  return sanitizeTitles(state.titles, state.teams.map((t) => t.id));
+}
+
 function renderRow(row) {
   const cls = state.classes.get(row.teamId) ?? { zone: null, viaTitle: false };
 
@@ -368,8 +383,9 @@ function renderZoneLegend() {
   // pulado), então a legenda conta clubes em vez de dizer "do 1º ao 4º".
   const count = (id) =>
     [...state.classes.values()].filter((c) => c.zone === id).length;
+  const titles = activeTitles();
   const range = (zone) =>
-    state.scenario && zone.id !== 'rebaixamento'
+    titles && zone.id !== 'rebaixamento'
       ? `${count(zone.id)} clubes`
       : `${zone.from}º${zone.to !== zone.from ? `–${zone.to}º` : ''}`;
 
@@ -383,7 +399,7 @@ function renderZoneLegend() {
     ]),
   );
 
-  if (state.scenario) {
+  if (titles) {
     items.splice(
       1,
       0,
@@ -410,7 +426,7 @@ function render() {
   state.classes = classify(
     rows,
     state.zones,
-    state.scenario ? SCENARIOS[state.scenario] : null,
+    activeTitles(),
   );
   renderZoneLegend();
   renderHead();
@@ -434,16 +450,17 @@ function render() {
     decided < total
       ? ' A match with no guess scores nothing, so the Máx column shows each club\u2019s ceiling.'
       : '';
-  const scenarioPt = state.scenario
-    ? ' Cenário perfeito: Palmeiras campeão da Libertadores e da Copa do Brasil; ' +
-      'Atlético-MG campeão da Sul-Americana e vice da Copa do Brasil. O Brasil ' +
-      'passa a ter 9 vagas, e os dois clubes não ocupam vaga da tabela: ' +
+  const titles = activeTitles();
+  const nameOf = Object.fromEntries(state.teams.map((t) => [t.id, t.name]));
+  const scenarioPt = titles
+    ? ` Títulos assumidos: ${describeTitles(titles, nameOf, 'pt')}. Quem ganha uma ` +
+      'copa se classifica por ela e não ocupa vaga da tabela (★): ' +
       'as faixas descem para quem vem atrás.'
     : '';
-  const scenarioEn = state.scenario
-    ? ` Perfect scenario: ${SCENARIOS[state.scenario].summary}. Brazil gets 9 ` +
-      'Libertadores places and those two clubs do not use a table place, so ' +
-      'every band moves down to the clubs behind them.'
+  const scenarioEn = titles
+    ? ` Assumed cup results: ${describeTitles(titles, nameOf, 'en')}. A club that ` +
+      'wins a cup qualifies by it and does not use a table place (★), so every ' +
+      'band moves down to the clubs behind it.'
     : '';
   el.tableNote.replaceChildren(
     document.createTextNode(
@@ -527,6 +544,57 @@ function initTableEvents() {
   });
 }
 
+const TITLE_FIELDS = {
+  libertadores: ['Campeão da Libertadores', 'Libertadores champion'],
+  sulamericana: ['Campeão da Sul-Americana', 'Sul-Americana champion'],
+  copaChampion: ['Campeão da Copa do Brasil', 'Copa do Brasil champion'],
+  copaRunnerUp: ['Vice da Copa do Brasil', 'Copa do Brasil runner-up'],
+};
+
+/** Pares de campos em que o mesmo clube não pode aparecer nos dois. */
+const EXCLUSIVE = { copaChampion: 'copaRunnerUp', copaRunnerUp: 'copaChampion',
+  libertadores: 'sulamericana', sulamericana: 'libertadores' };
+
+/** Põe nos seletores o que está em state.titles e atualiza o resumo e o botão. */
+function syncScenarioControls() {
+  for (const select of el.scenarioFields.querySelectorAll('select')) {
+    const key = select.dataset.key;
+    select.value = state.titles[key] ?? '';
+    // O clube escolhido no campo que se exclui some das opções deste.
+    const other = state.titles[EXCLUSIVE[key]];
+    for (const option of select.options) {
+      option.disabled = Boolean(option.value) && option.value === other;
+    }
+  }
+  const n = TITLE_KEYS.filter((k) => state.titles[k]).length;
+  el.scenarioCount.textContent = n ? `(${n} definido${n > 1 ? 's' : ''})` : '';
+  const preset = TITLE_KEYS.every((k) => state.titles[k] === SCENARIOS.perfect[k]);
+  el.perfectBtn.setAttribute('aria-pressed', String(preset));
+}
+
+function initScenario() {
+  const teams = [...state.teams].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  el.scenarioFields.replaceChildren(
+    ...TITLE_KEYS.map((key) => {
+      const select = h('select', { id: `title-${key}`, 'data-key': key }, [
+        h('option', { value: '', text: 'Outro clube ou não definido' }),
+        ...teams.map((t) => h('option', { value: t.id, text: t.name })),
+      ]);
+      select.addEventListener('change', () => {
+        state.titles[key] = select.value || null;
+        syncScenarioControls();
+        render();
+      });
+      return h('label', { className: 'scenario__field', for: `title-${key}` }, [
+        h('span', { text: TITLE_FIELDS[key][0] }),
+        h('span', { className: 'en', text: TITLE_FIELDS[key][1] }),
+        select,
+      ]);
+    }),
+  );
+  syncScenarioControls();
+}
+
 function initToolbar() {
   el.homeWinBtn.addEventListener('click', () => {
     // Vitória do mandante em todo jogo que ainda não tem palpite.
@@ -536,8 +604,14 @@ function initToolbar() {
   });
 
   el.perfectBtn.addEventListener('click', () => {
-    state.scenario = state.scenario ? null : 'perfect';
-    el.perfectBtn.setAttribute('aria-pressed', String(Boolean(state.scenario)));
+    const on = el.perfectBtn.getAttribute('aria-pressed') === 'true';
+    Object.assign(
+      state.titles,
+      on ? { libertadores: null, sulamericana: null, copaChampion: null, copaRunnerUp: null }
+         : SCENARIOS.perfect,
+    );
+    if (!on) el.scenarioPanel.open = true;
+    syncScenarioControls();
     render();
   });
 
@@ -625,7 +699,7 @@ function initAnalysis() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           predictions: state.predictions,
-          scenario: state.scenario ?? undefined,
+          titles: activeTitles() ?? undefined,
           question: el.analysisQuestion.value || undefined,
         }),
       });
@@ -760,6 +834,7 @@ async function start() {
   );
 
   initTableEvents();
+  initScenario();
   initToolbar();
   initSave();
   initAnalysis();

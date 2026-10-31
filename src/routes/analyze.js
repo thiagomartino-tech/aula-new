@@ -14,7 +14,9 @@ import { STANDINGS, ZONES } from '../data/standings.js';
 import { FIXTURES } from '../data/fixtures.js';
 import { SEASON } from '../data/season.js';
 import { projectTable, sanitizePredictions } from '../../public/shared/table.js';
-import { classify, SCENARIOS } from '../../public/shared/qualification.js';
+import { classify, describeTitles, sanitizeTitles } from '../../public/shared/qualification.js';
+
+const NAME_OF = Object.fromEntries(TEAMS.map((t) => [t.id, t.name]));
 
 const SYSTEM_PROMPT = `You are a Brazilian football analyst: direct, no filler.
 You receive the PROJECTED final table of a Brasileirão scenario a fan has simulated,
@@ -32,8 +34,8 @@ Rules:
  * As faixas vêm do mesmo motor que colore a tela, para a IA e a tabela não
  * discordarem sobre quem vai à Libertadores.
  */
-function renderTable(rows, scenario) {
-  const classes = classify(rows, ZONES, scenario);
+function renderTable(rows, titles) {
+  const classes = classify(rows, ZONES, titles);
   const lines = rows.map((r) => {
     const { zone: zoneId, viaTitle } = classes.get(r.teamId);
     const zone = ZONES.find((z) => z.id === zoneId);
@@ -89,8 +91,12 @@ export async function handleAnalyze(request, env) {
     predictions,
   });
 
-  // Só os cenários prontos; o cliente nunca manda as regras, só escolhe uma.
-  const scenario = body.scenario === 'perfect' ? SCENARIOS.perfect : null;
+  // O cliente escolhe quem ganha as outras copas, nunca as regras de vaga: só
+  // ids de clubes que existem passam, e as faixas são refeitas aqui.
+  const titles = sanitizeTitles(
+    body.titles,
+    TEAMS.map((t) => t.id),
+  );
 
   const question =
     typeof body.question === 'string' && body.question.trim()
@@ -101,13 +107,14 @@ export async function handleAnalyze(request, env) {
     `${SEASON.competition} ${SEASON.year} — simulated scenario.`,
     `Guesses given: ${decided} of ${total} remaining matches.`,
     '',
-    scenario
-      ? `Cup scenario assumed by the fan: ${scenario.summary}. Brazil then has 9 ` +
-        'Libertadores places and those two clubs do not take a table place, so ' +
-        'the bands below move down. The bands in the table already account for this.\n'
+    titles
+      ? `Cup results assumed by the fan: ${describeTitles(titles, NAME_OF)}. A club ` +
+        'that wins a cup is qualified for the Libertadores by that title and does ' +
+        'not use a table place, so the bands below move down to the clubs behind ' +
+        'it. The bands in the table already account for this.\n'
       : '',
     'PROJECTED FINAL TABLE:',
-    renderTable(rows, scenario),
+    renderTable(rows, titles),
     '',
     'GUESSES:',
     renderPredictions(predictions),

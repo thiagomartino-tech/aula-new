@@ -118,3 +118,79 @@ test('sem cenário, classify devolve a cor da posição e ninguém por título',
   assert.equal(got.get(IDS[19]).zone, 'rebaixamento');
   assert.ok([...got.values()].every((v) => v.viaTitle === false));
 });
+
+/* ------------------------------------------------ títulos escolhidos à mão */
+
+import { TITLE_KEYS, describeTitles, sanitizeTitles } from '../public/shared/qualification.js';
+
+test('sanitizeTitles aceita só ids de clubes que existem', () => {
+  const got = sanitizeTitles(
+    { libertadores: 'palmeiras', sulamericana: 'clube-inventado', copaChampion: '<script>', copaRunnerUp: 42 },
+    IDS,
+  );
+  assert.deepEqual(got, { libertadores: 'palmeiras', sulamericana: null, copaChampion: null, copaRunnerUp: null });
+});
+
+test('sanitizeTitles devolve null quando nada foi escolhido ou a entrada é lixo', () => {
+  for (const raw of [null, undefined, 'abc', 5, [], {}, { libertadores: 'nada' }]) {
+    assert.equal(sanitizeTitles(raw, IDS), null, JSON.stringify(raw));
+  }
+});
+
+test('o mesmo clube não é campeão e vice da Copa, nem campeão das duas copas continentais', () => {
+  const got = sanitizeTitles(
+    { copaChampion: 'flamengo', copaRunnerUp: 'flamengo', libertadores: 'bahia', sulamericana: 'bahia' },
+    IDS,
+  );
+  assert.equal(got.copaChampion, 'flamengo');
+  assert.equal(got.copaRunnerUp, null);
+  assert.equal(got.libertadores, 'bahia');
+  assert.equal(got.sulamericana, null);
+});
+
+test('o cenário perfeito passa pela validação sem mudar', () => {
+  assert.deepEqual(sanitizeTitles(SCENARIOS.perfect, IDS), SCENARIOS.perfect);
+});
+
+test('describeTitles cita só os títulos escolhidos, em português e em inglês', () => {
+  const nameOf = { bahia: 'Bahia', santos: 'Santos' };
+  const titles = { libertadores: 'bahia', sulamericana: null, copaChampion: null, copaRunnerUp: 'santos' };
+  assert.equal(describeTitles(titles, nameOf, 'en'),
+    'Bahia win the Libertadores; Santos are the Copa do Brasil runners-up');
+  assert.equal(describeTitles(titles, nameOf, 'pt'),
+    'Bahia campeão da Libertadores; Santos vice da Copa do Brasil');
+  assert.equal(describeTitles(null, nameOf), '');
+});
+
+test('em qualquer combinação, quem ganhou título está na Libertadores e cada clube tem uma faixa só', () => {
+  const picks = [null, 'flamengo', 'palmeiras', 'bahia', 'atletico-mg', 'santos'];
+  const inLibertadores = (zone) => zone === 'libertadores' || zone === 'libertadores-pre';
+  let checked = 0;
+
+  for (const lib of picks) {
+    for (const sula of picks) {
+      for (const champ of picks) {
+        for (const vice of picks) {
+          const titles = sanitizeTitles(
+            { libertadores: lib, sulamericana: sula, copaChampion: champ, copaRunnerUp: vice },
+            IDS,
+          );
+          if (!titles) continue;
+          const q = qualificationFor(IDS, ZONES, titles);
+          checked += 1;
+
+          assert.equal(new Set(q.zoneOf.keys()).size, q.zoneOf.size, JSON.stringify(titles));
+          for (const key of TITLE_KEYS) {
+            if (!titles[key]) continue;
+            assert.ok(inLibertadores(q.zoneOf.get(titles[key])), `${key} em ${JSON.stringify(titles)}`);
+          }
+          // Os campeões continentais nunca ocupam vaga da tabela.
+          for (const key of ['libertadores', 'sulamericana']) {
+            if (titles[key]) assert.ok(q.viaTitle.has(titles[key]), key);
+          }
+        }
+      }
+    }
+  }
+  assert.ok(checked > 1000, `só ${checked} combinações conferidas`);
+});

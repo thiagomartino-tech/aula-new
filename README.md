@@ -33,25 +33,30 @@ como **1 a 0** para o vencedor e **0 a 0** no empate — o suficiente para o
 saldo de gols funcionar como critério de desempate. Os critérios aplicados são
 os do regulamento, na ordem: pontos, vitórias, saldo de gols e gols pró.
 
-### Faixas e o botão "Cenário perfeito"
+### Faixas e os títulos das outras copas
 
 As cores da tabela seguem a regra de 2026 da CBF: **1º a 4º** vão direto à fase
 de grupos da Libertadores, o **5º** vai à fase prévia, e o **6º ao 11º** vão à
 Sul-Americana (o G6 acabou porque a Copa do Brasil passou a dar 2 vagas). Os
 tamanhos vêm de `ZONES`, em `src/data/standings.js`.
 
-O botão **Cenário perfeito** liga um cenário em que Palmeiras é campeão da
-Libertadores e da Copa do Brasil, e Atlético-MG é campeão da Sul-Americana e
-vice da Copa do Brasil. Nesse cenário o Brasil tem 9 vagas, e os dois clubes não
-ocupam vaga da tabela (marcados com ★): as faixas descem para quem vem atrás.
+O painel **Títulos das outras copas** deixa escolher quem ganha a Libertadores,
+a Sul-Americana e a Copa do Brasil (campeão e vice). Quem ganha uma copa se
+classifica por ela e não ocupa vaga da tabela (marcado com ★), então as faixas
+descem para quem vem atrás. O botão **Cenário perfeito** é um atalho que
+preenche Palmeiras campeão da Libertadores e da Copa do Brasil, e Atlético-MG
+campeão da Sul-Americana e vice da Copa do Brasil: o Brasil chega a 9 vagas.
+
 O cálculo está em `public/shared/qualification.js`, que o navegador e o Worker
-importam, e os testes em `test/qualification.test.js` conferem que o total fecha
-em 9 clubes onde quer que os dois clubes terminem.
+importam. O Worker valida os títulos (só ids de clubes que existem) e refaz as
+faixas, então a IA lê as mesmas cores da tela. Os testes conferem, entre outras
+coisas, que o total fecha em 9 clubes onde quer que os dois campeões terminem.
 
 As regras de herança de vagas estão no comentário do arquivo. **Elas vêm de
 reportagens, não do texto do regulamento** — confira no site da CBF antes de
 tratar o resultado como definitivo. Não está modelado o clube que se classifica
-por título e cai para a Série B.
+por título e cai para a Série B. Os títulos escolhidos não vão no link de
+compartilhamento: só os palpites vão.
 
 ## Rodando
 
@@ -105,7 +110,7 @@ servidor, então a tabela que você vê e a que a IA recebe nunca divergem.
 | --- | --- |
 | `GET /api/health` | Diz quais integrações estão configuradas |
 | `GET /api/bootstrap` | Clubes, classificação, jogos restantes e faixas da tabela |
-| `POST /api/analyze` | Manda o cenário simulado para a NVIDIA LLM API. Aceita `scenario: "perfect"` para analisar com o cenário de vagas ligado |
+| `POST /api/analyze` | Manda o cenário simulado para a NVIDIA LLM API. Aceita `titles` (campeões das outras copas) para analisar com as vagas recalculadas |
 | `POST /api/chat` | Chat genérico com a NVIDIA, sem nada do Brasileirão |
 | `POST /api/simulations` | Salva a simulação e devolve um id curto |
 | `GET /api/simulations/:id` | Carrega uma simulação salva |
