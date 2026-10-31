@@ -156,10 +156,11 @@ preencha. Esse arquivo está no `.gitignore`.
 
 ## Fonte dos dados
 
-A classificação em `src/data/standings.js` é um retrato de **28/10/2026**,
-depois da **32ª rodada**, e os jogos em `src/data/fixtures.js` são as rodadas
-33 a 38 da tabela da CBF mais o jogo atrasado da 21ª rodada entre Chapecoense e
-Vasco, adiado pelos playoffs da Sul-Americana e ainda sem data.
+A classificação em `src/data/standings.js` é um retrato de **31/10/2026**,
+depois da **32ª rodada** e de 9 dos 10 jogos da 33ª (falta Coritiba x Vitória),
+e os jogos em `src/data/fixtures.js` são o que resta das rodadas 33 a 38 da
+tabela da CBF mais o jogo atrasado da 21ª rodada entre Chapecoense e Vasco,
+adiado pelos playoffs da Sul-Americana e ainda sem data.
 
 O pedido original era pegar os números do ge.globo.com. O domínio está
 bloqueado na rede onde este projeto foi montado, então os dados vieram de
@@ -168,10 +169,9 @@ ESPN). Os números foram conferidos por consistência interna, e os testes em
 `test/` travam essas invariantes:
 
 - em toda linha, `V + E + D = J` e `3V + E = Pts`;
-- a soma dos gols pró é igual à soma dos gols contra (849 de cada lado);
-- o total de jogos disputados fecha em 319, que é exatamente
-  `(32 × 20 − 2) / 2` contando o jogo atrasado;
-- cada uma das 6 rodadas tem 10 jogos cobrindo os 20 clubes uma vez só;
+- a soma dos gols pró é igual à soma dos gols contra;
+- jogos disputados mais jogos restantes dão 380, ou seja, 20 × 19;
+- cada rodada restante tem de 1 a 10 jogos, sem clube repetido;
 - todo clube termina a temporada com 38 jogos.
 
 **Confira a tabela no ge.globo.com antes de usar os números para algo sério**,
