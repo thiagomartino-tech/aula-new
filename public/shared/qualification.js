@@ -20,19 +20,57 @@
  * seria redistribuída) e campeões de fora do Brasil.
  */
 
-/** Cenários prontos que o botão da interface liga. */
+/** Os quatro títulos que mexem nas vagas do Brasileirão. */
+export const TITLE_KEYS = ['libertadores', 'sulamericana', 'copaChampion', 'copaRunnerUp'];
+
+/** Cenário pronto: o que o botão "Cenário perfeito" preenche. */
 export const SCENARIOS = {
   perfect: {
-    id: 'perfect',
     libertadores: 'palmeiras',
     sulamericana: 'atletico-mg',
     copaChampion: 'palmeiras',
     copaRunnerUp: 'atletico-mg',
-    summary:
-      'Palmeiras win the Libertadores and the Copa do Brasil; ' +
-      'Atlético-MG win the Sul-Americana and are the Copa do Brasil runners-up',
   },
 };
+
+/**
+ * Limpa os títulos vindos de fora (do cliente, no Worker): só ids de clubes
+ * conhecidos, e nada de o mesmo clube ocupando duas posições que se excluem.
+ * Devolve null quando nenhum título foi escolhido, que é a tabela pura.
+ */
+export function sanitizeTitles(raw, validIds) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ids = new Set(validIds);
+  const out = {};
+  for (const key of TITLE_KEYS) {
+    out[key] = typeof raw[key] === 'string' && ids.has(raw[key]) ? raw[key] : null;
+  }
+  if (out.copaChampion && out.copaChampion === out.copaRunnerUp) out.copaRunnerUp = null;
+  if (out.libertadores && out.libertadores === out.sulamericana) out.sulamericana = null;
+  return TITLE_KEYS.some((key) => out[key]) ? out : null;
+}
+
+const PHRASES = {
+  en: {
+    libertadores: (n) => `${n} win the Libertadores`,
+    sulamericana: (n) => `${n} win the Sul-Americana`,
+    copaChampion: (n) => `${n} win the Copa do Brasil`,
+    copaRunnerUp: (n) => `${n} are the Copa do Brasil runners-up`,
+  },
+  pt: {
+    libertadores: (n) => `${n} campeão da Libertadores`,
+    sulamericana: (n) => `${n} campeão da Sul-Americana`,
+    copaChampion: (n) => `${n} campeão da Copa do Brasil`,
+    copaRunnerUp: (n) => `${n} vice da Copa do Brasil`,
+  },
+};
+
+/** Frase curta dos títulos escolhidos, para a nota da tela e para o prompt. */
+export function describeTitles(titles, nameOf, lang = 'en') {
+  return TITLE_KEYS.filter((key) => titles?.[key])
+    .map((key) => PHRASES[lang][key](nameOf[titles[key]] ?? titles[key]))
+    .join('; ');
+}
 
 const DIRECT = 'libertadores';
 const PRE = 'libertadores-pre';
@@ -46,7 +84,7 @@ const spanOf = (zones, id) => {
 /**
  * @param {string[]} order  clubes por posição, do 1º ao último
  * @param {Array} zones     ZONES: de onde saem os tamanhos das faixas
- * @param {object|null} titles  um cenário de SCENARIOS, ou null para a tabela pura
+ * @param {object|null} titles  títulos limpos por sanitizeTitles, ou null para a tabela pura
  * @returns {{ zoneOf: Map<string,string>, viaTitle: Set<string> }}
  */
 export function qualificationFor(order, zones, titles = null) {

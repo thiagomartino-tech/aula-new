@@ -641,3 +641,38 @@ tr[data-zone="rebaixamento"]     .pos::before { background: var(--zone-rebaixame
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Títulos das outras copas */
+.scenario {
+  margin-top: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0 16px;
+}
+.scenario summary {
+  cursor: pointer;
+  padding: 11px 0;
+  font-weight: 600;
+  list-style-position: inside;
+}
+.scenario__count { font-weight: 400; color: var(--text-faint); }
+.scenario[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+.scenario__hint { margin: 0 0 12px; color: var(--text-muted, var(--text-faint)); font-size: 0.85rem; }
+.scenario__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding-bottom: 14px;
+}
+.scenario__field { display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
+.scenario__field select {
+  margin-top: 4px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 8px;
+}

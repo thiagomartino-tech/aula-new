@@ -40,12 +40,27 @@
       </div>
       <div class="toolbar__actions">
         <button type="button" class="btn" id="homeWinBtn"><span class="btn__pt">Simula Home Win</span><span class="en">Home win in every match</span></button>
-        <button type="button" class="btn" id="perfectBtn" aria-pressed="false" title="Palmeiras campeão da Libertadores e da Copa do Brasil; Atlético-MG campeão da Sul-Americana e vice da Copa do Brasil"><span class="btn__pt">Cenário perfeito</span><span class="en">Palmeiras and Atlético win the cups</span></button>
+        <button type="button" class="btn" id="perfectBtn" aria-pressed="false" title="Preenche os títulos: Palmeiras campeão da Libertadores e da Copa do Brasil; Atlético-MG campeão da Sul-Americana e vice da Copa do Brasil"><span class="btn__pt">Cenário perfeito</span><span class="en">Palmeiras and Atlético win the cups</span></button>
         <button type="button" class="btn" id="clearBtn"><span class="btn__pt">Limpar palpites</span><span class="en">Clear all guesses</span></button>
         <button type="button" class="btn" id="saveBtn" hidden><span class="btn__pt">Salvar e compartilhar</span><span class="en">Save and share</span></button>
         <button type="button" class="btn btn--primary" id="analyzeBtn" hidden><span class="btn__pt">Analisar com IA</span><span class="en">Analyse with AI</span></button>
       </div>
     </section>
+
+    <!-- Títulos das outras copas: mexem nas vagas da Libertadores -->
+    <details class="scenario" id="scenarioPanel">
+      <summary>
+        <span class="legend__pair">
+          <span>Títulos das outras copas <span class="scenario__count" id="scenarioCount"></span></span>
+          <span class="en">Who wins the other cups</span>
+        </span>
+      </summary>
+      <p class="scenario__hint">
+        Quem ganha uma copa se classifica por ela e não ocupa vaga da tabela: as faixas descem para quem vem atrás.
+        <span class="en">A club that wins a cup qualifies by it and does not use a table place, so the bands move down.</span>
+      </p>
+      <div class="scenario__fields" id="scenarioFields"></div>
+    </details>
 
     <!-- Legenda -->
     <section class="legend" aria-label="Legenda">
