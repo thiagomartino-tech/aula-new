@@ -30,10 +30,6 @@ export const FIXTURES = [
   // --- 33ª rodada (parcial) -----------------------------------------------
   // Os 5 jogos de 28/10 já foram disputados e saíram daqui: estão lançados
   // em standings.js. Os que restam são de 29 a 31/10.
-  { round: 33, home: 'atletico-mg',  away: 'cruzeiro' },
-  { round: 33, home: 'vasco',        away: 'flamengo' },
-  { round: 33, home: 'gremio',       away: 'athletico-pr' },
-  { round: 33, home: 'corinthians',  away: 'mirassol' },
   { round: 33, home: 'coritiba',     away: 'vitoria' },
 
   // --- 34ª rodada ---------------------------------------------------------

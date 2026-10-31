@@ -24,6 +24,10 @@ const project = (predictions) =>
 
 const find = (rows, id) => rows.find((r) => r.teamId === id);
 
+// Qualquer jogo que ainda falta (fora o atrasado). Os testes não devem nomear
+// um jogo específico: ele sai de FIXTURES no dia em que for disputado.
+const sample = () => FIXTURES.find((f) => !f.deferred);
+
 /**
  * Palpites variados e determinísticos: alterna vitória do mandante, empate e
  * vitória do visitante. Exercita os três resultados sem depender de sorteio,
@@ -69,33 +73,34 @@ test('quem tem mais pontos aparece antes', () => {
 });
 
 test('uma vitória vale 3 pontos para o mandante', () => {
-  const fixture = FIXTURES.find((f) => f.id === 'r33-vasco-flamengo');
+  const fixture = sample();
   const base = project({});
   const after = project({ [fixture.id]: OUTCOME.HOME });
+  const { home, away } = fixture;
 
-  assert.equal(find(after.rows, 'vasco').pts, find(base.rows, 'vasco').pts + 3);
-  assert.equal(find(after.rows, 'flamengo').pts, find(base.rows, 'flamengo').pts);
-  assert.equal(find(after.rows, 'vasco').won, find(base.rows, 'vasco').won + 1);
-  assert.equal(find(after.rows, 'flamengo').lost, find(base.rows, 'flamengo').lost + 1);
+  assert.equal(find(after.rows, home).pts, find(base.rows, home).pts + 3);
+  assert.equal(find(after.rows, away).pts, find(base.rows, away).pts);
+  assert.equal(find(after.rows, home).won, find(base.rows, home).won + 1);
+  assert.equal(find(after.rows, away).lost, find(base.rows, away).lost + 1);
 });
 
 test('o empate dá 1 ponto aos dois e não mexe no saldo', () => {
-  const fixture = FIXTURES.find((f) => f.id === 'r33-vasco-flamengo');
+  const fixture = sample();
   const base = project({});
   const after = project({ [fixture.id]: OUTCOME.DRAW });
 
-  for (const id of ['vasco', 'flamengo']) {
+  for (const id of [fixture.home, fixture.away]) {
     assert.equal(find(after.rows, id).pts, find(base.rows, id).pts + 1, id);
     assert.equal(find(after.rows, id).goalDiff, find(base.rows, id).goalDiff, id);
   }
 });
 
 test('o mesmo jogo nunca dá dois resultados contraditórios', () => {
-  const fixture = FIXTURES.find((f) => f.id === 'r33-vasco-flamengo');
+  const fixture = sample();
   const { rows } = project({ [fixture.id]: OUTCOME.AWAY });
 
-  assert.equal(find(rows, 'vasco').games[33].result, RESULT.LOSS);
-  assert.equal(find(rows, 'flamengo').games[33].result, RESULT.WIN);
+  assert.equal(find(rows, fixture.home).games[fixture.round].result, RESULT.LOSS);
+  assert.equal(find(rows, fixture.away).games[fixture.round].result, RESULT.WIN);
 });
 
 test('com todos os jogos palpitados, todo clube chega a 38 jogos', () => {
@@ -159,31 +164,29 @@ test('o ciclo de cliques volta ao começo em 4 passos', () => {
 });
 
 test('converter resultado para jogo e de volta é simétrico', () => {
-  const fixture = FIXTURES.find((f) => f.id === 'r33-vasco-flamengo');
-  for (const teamId of ['vasco', 'flamengo']) {
+  const fixture = sample();
+  for (const teamId of [fixture.home, fixture.away]) {
     for (const result of [RESULT.WIN, RESULT.DRAW, RESULT.LOSS]) {
       const outcome = outcomeFromTeamResult(fixture, teamId, result);
       assert.equal(resultForTeam(fixture, teamId, outcome), result);
     }
   }
-  assert.equal(outcomeFromTeamResult(fixture, 'vasco', null), null);
-  assert.equal(resultForTeam(fixture, 'vasco', null), null);
+  assert.equal(outcomeFromTeamResult(fixture, fixture.home, null), null);
+  assert.equal(resultForTeam(fixture, fixture.home, null), null);
 });
 
 test('sanitizePredictions descarta jogo inexistente e resultado inválido', () => {
+  const [a, b, c] = FIXTURES;
   const clean = sanitizePredictions(
     {
-      'r33-vasco-flamengo': 'H',
+      [a.id]: 'H',
       'jogo-que-nao-existe': 'H',
-      'r33-santos-palmeiras': 'XYZ',
-      'r34-flamengo-gremio': 'D',
+      [b.id]: 'XYZ',
+      [c.id]: 'D',
     },
     FIXTURES,
   );
-  assert.deepEqual(clean, {
-    'r33-vasco-flamengo': 'H',
-    'r34-flamengo-gremio': 'D',
-  });
+  assert.deepEqual(clean, { [a.id]: 'H', [c.id]: 'D' });
 });
 
 test('sanitizePredictions aceita entrada vazia ou nula', () => {
@@ -194,11 +197,12 @@ test('sanitizePredictions aceita entrada vazia ou nula', () => {
 
 test('fillRemaining preserva os palpites que já existem', () => {
   // O botão só completa o que falta: um palpite feito à mão sobrevive.
-  const existing = { 'r33-vasco-flamengo': OUTCOME.AWAY };
+  const id = sample().id;
+  const existing = { [id]: OUTCOME.AWAY };
   const filled = fillRemaining(FIXTURES, existing, OUTCOME.HOME);
-  assert.equal(filled['r33-vasco-flamengo'], OUTCOME.AWAY);
+  assert.equal(filled[id], OUTCOME.AWAY);
   assert.equal(Object.keys(filled).length, FIXTURES.length);
-  assert.deepEqual(existing, { 'r33-vasco-flamengo': OUTCOME.AWAY }, 'não altera a entrada');
+  assert.deepEqual(existing, { [id]: OUTCOME.AWAY }, 'não altera a entrada');
 });
 
 test('fillRemaining com vitória do mandante não gera empate nem derrota fora', () => {
@@ -211,13 +215,13 @@ test('fillRemaining com vitória do mandante não gera empate nem derrota fora',
   assert.equal(rows.reduce((a, r) => a + r.drawn, 0), empatesAntes);
 });
 
-test('uma vitória do Vasco no jogo atrasado tira ele do Z-4', () => {
-  // Cenário concreto: o jogo atrasado existe e vale pontos de verdade.
+test('o jogo atrasado vale pontos de verdade e conta como jogo a mais', () => {
   const deferred = FIXTURES.find((f) => f.deferred);
-  assert.equal(deferred.away, 'vasco');
+  assert.ok(deferred, 'a temporada tem um jogo atrasado');
 
   const base = project({});
   const after = project({ [deferred.id]: OUTCOME.AWAY });
-  assert.equal(find(after.rows, 'vasco').pts, find(base.rows, 'vasco').pts + 3);
-  assert.equal(find(after.rows, 'vasco').played, 32);
+  const team = find(after.rows, deferred.away);
+  assert.equal(team.pts, find(base.rows, deferred.away).pts + 3);
+  assert.equal(team.played, find(base.rows, deferred.away).played + 1);
 });

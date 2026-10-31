@@ -97,6 +97,11 @@ rodada que chega a zero jogos acabou: aí sim ela sai de `REMAINING_ROUNDS` e
 8. **Regere o seed**: `npm run seed`. O `supabase/seed.sql` é gerado a partir
    de `src/data/`, e o CI falha se ele ficar para trás.
 
+   **E avise o usuário para rodar o seed no Supabase.** Com o banco ligado, o
+   site lê a classificação de lá, não do arquivo: sem esse passo a tela continua
+   mostrando os números antigos mesmo depois do deploy. O seed usa
+   `on conflict … do update`, então pode ser rodado de novo sem risco.
+
 9. **Commit e push.** Se o usuário pedir, abra PR; senão, deixe na branch.
 
 ## As invariantes que decidem
@@ -150,6 +155,11 @@ Se um teste falhar porque os dados mudaram — e não porque estão errados —,
 reescreva-o como propriedade. Em vez de fixar a ordem dos oito primeiros,
 verifique que nenhuma linha vem antes de outra que deveria precedê-la; em vez
 de fixar jogos pendentes, verifique que `played + pending = 38` para todos.
+
+Isso vale também para **nomear um jogo**. Testes que usavam
+`'r33-vasco-flamengo'` quebraram no dia em que esse jogo foi disputado e saiu
+de `FIXTURES`, e o mesmo vale para o `32` fixo de jogos do Vasco. Pegue um jogo
+qualquer da lista (`FIXTURES.find((f) => !f.deferred)`) e derive os clubes dele.
 
 A conferência contra a tabela publicada continua valendo, mas é trabalho de
 atualização — olho no número, uma vez —, não algo para congelar em teste.
