@@ -40,21 +40,24 @@ export const STANDINGS = [
 ];
 
 /**
- * Faixas de classificação, com a explicação em inglês que a interface mostra
- * abaixo de cada rótulo — o público da apresentação não acompanha o futebol
- * brasileiro e precisa saber o que cada faixa significa.
+ * Faixas de classificação pela tabela, com a explicação em inglês que a
+ * interface mostra abaixo de cada rótulo — o público da apresentação não
+ * acompanha o futebol brasileiro e precisa saber o que cada faixa significa.
  *
- * As vagas de Libertadores entram como uma faixa só, de 1º a 6º: o número que
- * vai direto à fase de grupos e o que passa pela prévia muda conforme os
- * campeões da Libertadores e da Copa do Brasil, e essa distinção não ajuda
- * quem está vendo a tabela pela primeira vez.
+ * Regra de 2026 (CBF): o Brasileirão dá 5 vagas à Libertadores, 4 direto na
+ * fase de grupos e 1 na fase prévia. A Copa do Brasil passou a dar 2, e por
+ * isso o antigo G6 acabou. O 6º ao 11º vão à Sul-Americana. Os tamanhos destas
+ * faixas também alimentam `qualificationFor()`, que reparte as vagas que
+ * sobram quando um campeão já estava classificado — não repita os números lá.
  */
 export const ZONES = [
-  { from: 1,  to: 6,  id: 'libertadores', label: 'Libertadores',
-    en: 'top continental cup' },
-  { from: 7,  to: 12, id: 'sulamericana', label: 'Sul-Americana',
+  { from: 1,  to: 4,  id: 'libertadores',     label: 'Libertadores',
+    en: 'top continental cup, straight to the group stage' },
+  { from: 5,  to: 5,  id: 'libertadores-pre', label: 'Pré-Libertadores',
+    en: 'top continental cup, qualifying round first' },
+  { from: 6,  to: 11, id: 'sulamericana',     label: 'Sul-Americana',
     en: 'second continental cup' },
-  { from: 17, to: 20, id: 'rebaixamento', label: 'Rebaixamento',
+  { from: 17, to: 20, id: 'rebaixamento',     label: 'Rebaixamento',
     en: 'relegated to the second division' },
 ];
 

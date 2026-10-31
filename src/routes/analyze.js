@@ -14,6 +14,7 @@ import { STANDINGS, ZONES } from '../data/standings.js';
 import { FIXTURES } from '../data/fixtures.js';
 import { SEASON } from '../data/season.js';
 import { projectTable, sanitizePredictions } from '../../public/shared/table.js';
+import { classify, SCENARIOS } from '../../public/shared/qualification.js';
 
 const SYSTEM_PROMPT = `You are a Brazilian football analyst: direct, no filler.
 You receive the PROJECTED final table of a Brasileirão scenario a fan has simulated,
@@ -26,15 +27,22 @@ Rules:
 - If some matches have no guess yet, say what is still open.
 - No lists, no markdown, no emoji. Plain prose.`;
 
-/** Monta a tabela projetada em texto, do jeito mais legível para o modelo. */
-function renderTable(rows) {
+/**
+ * Monta a tabela projetada em texto, do jeito mais legível para o modelo.
+ * As faixas vêm do mesmo motor que colore a tela, para a IA e a tabela não
+ * discordarem sobre quem vai à Libertadores.
+ */
+function renderTable(rows, scenario) {
+  const classes = classify(rows, ZONES, scenario);
   const lines = rows.map((r) => {
-    const zone = ZONES.find((z) => r.position >= z.from && z.to >= r.position);
+    const { zone: zoneId, viaTitle } = classes.get(r.teamId);
+    const zone = ZONES.find((z) => z.id === zoneId);
     const pending = r.pending > 0 ? `, ${r.pending} match(es) with no guess` : '';
     return (
       `${String(r.position).padStart(2)}. ${r.name} — ${r.pts} pts ` +
       `(${r.won}W ${r.drawn}D ${r.lost}L, goal difference ${r.goalDiff >= 0 ? '+' : ''}${r.goalDiff})` +
-      `${zone ? ` [${zone.label}: ${zone.en}]` : ''}${pending}`
+      `${zone ? ` [${zone.label}: ${zone.en}]` : ''}` +
+      `${viaTitle ? ' (place secured by a cup win, not by the table)' : ''}${pending}`
     );
   });
   return lines.join('\n');
@@ -81,6 +89,9 @@ export async function handleAnalyze(request, env) {
     predictions,
   });
 
+  // Só os cenários prontos; o cliente nunca manda as regras, só escolhe uma.
+  const scenario = body.scenario === 'perfect' ? SCENARIOS.perfect : null;
+
   const question =
     typeof body.question === 'string' && body.question.trim()
       ? body.question.trim().slice(0, 500)
@@ -90,8 +101,13 @@ export async function handleAnalyze(request, env) {
     `${SEASON.competition} ${SEASON.year} — simulated scenario.`,
     `Guesses given: ${decided} of ${total} remaining matches.`,
     '',
+    scenario
+      ? `Cup scenario assumed by the fan: ${scenario.summary}. Brazil then has 9 ` +
+        'Libertadores places and those two clubs do not take a table place, so ' +
+        'the bands below move down. The bands in the table already account for this.\n'
+      : '',
     'PROJECTED FINAL TABLE:',
-    renderTable(rows),
+    renderTable(rows, scenario),
     '',
     'GUESSES:',
     renderPredictions(predictions),

@@ -164,6 +164,13 @@ qualquer da lista (`FIXTURES.find((f) => !f.deferred)`) e derive os clubes dele.
 A conferência contra a tabela publicada continua valendo, mas é trabalho de
 atualização — olho no número, uma vez —, não algo para congelar em teste.
 
+## As faixas de classificação mudam de ano para ano
+
+`ZONES`, em `standings.js`, não é eterno: a CBF muda o número de vagas. Em 2026
+o G6 virou G5 (4 diretas + 1 prévia) e a Sul-Americana passou a começar no 6º.
+No começo de cada temporada, confira o regulamento antes de reaproveitar os
+números do ano anterior. `qualificationFor()` lê os tamanhos daqui.
+
 ## O que não mexer
 
 A tabela e o modelo de IA são assuntos separados. Atualizar a classificação
