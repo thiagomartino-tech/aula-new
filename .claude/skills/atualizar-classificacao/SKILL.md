@@ -171,6 +171,19 @@ o G6 virou G5 (4 diretas + 1 prévia) e a Sul-Americana passou a começar no 6º
 No começo de cada temporada, confira o regulamento antes de reaproveitar os
 números do ano anterior. `qualificationFor()` lê os tamanhos daqui.
 
+## Quem ainda disputa as copas
+
+`src/data/competitions.js` diz quais clubes brasileiros ainda podem ser campeões
+da Libertadores, da Sul-Americana e da Copa do Brasil; os seletores do painel
+de títulos só oferecem esses. Atualize quando uma fase terminar:
+
+- **semifinal da Copa decidida:** troque a chave pelo vencedor, por exemplo
+  `[['palmeiras'], ['atletico-mg']]`. A final é entre os vencedores das duas
+  chaves, e o código usa isso para impedir campeão e vice da mesma chave;
+- **final decidida:** deixe só o campeão em `brazilian` (ou a lista vazia, se
+  ganhou um clube de fora) e mude `stage`;
+- `npm test` confere que os ids existem e que as chaves não se misturam.
+
 ## O que não mexer
 
 A tabela e o modelo de IA são assuntos separados. Atualizar a classificação

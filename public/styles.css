@@ -676,3 +676,9 @@ tr[data-zone="rebaixamento"]     .pos::before { background: var(--zone-rebaixame
   border-radius: 8px;
   padding: 7px 8px;
 }
+.scenario__stage { color: var(--text-muted); font-size: 0.78rem; }
+.scenario__slots {
+  margin: 0 0 12px; padding: 8px 10px; font-size: 0.85rem; font-weight: 600;
+  background: var(--surface-2); border-radius: 8px;
+}
+.scenario__slots .en { display: block; font-weight: 400; }

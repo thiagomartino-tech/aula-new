@@ -43,14 +43,23 @@ tamanhos vêm de `ZONES`, em `src/data/standings.js`.
 O painel **Títulos das outras copas** deixa escolher quem ganha a Libertadores,
 a Sul-Americana e a Copa do Brasil (campeão e vice). Quem ganha uma copa se
 classifica por ela e não ocupa vaga da tabela (marcado com ★), então as faixas
-descem para quem vem atrás. O botão **Cenário perfeito** é um atalho que
-preenche Palmeiras campeão da Libertadores e da Copa do Brasil, e Atlético-MG
-campeão da Sul-Americana e vice da Copa do Brasil: o Brasil chega a 9 vagas.
+descem para quem vem atrás. O painel mostra quantas vagas a tabela distribui
+agora: por exemplo, o vice da Copa que já tem vaga por outro caminho libera a
+prévia dele para o próximo da tabela. O botão **Cenário perfeito** é um atalho
+que preenche Palmeiras campeão da Libertadores e da Copa do Brasil, e Atlético-MG
+campeão da Sul-Americana e vice da Copa do Brasil.
+
+**Só quem ainda disputa aparece nos seletores.** Isso vem de
+`src/data/competitions.js`, que é à mão, como a classificação: hoje a final da
+Libertadores é Palmeiras x Estudiantes, a da Sul-Americana é Atlético-MG x Boca
+Juniors, e a Copa do Brasil está nas semifinais (Palmeiras x Vasco e Grêmio x
+Atlético-MG). Na Copa, campeão e vice vêm de chaves diferentes, porque a final é
+entre os vencedores das duas semifinais. Quando uma fase termina, atualize esse
+arquivo; o atalho se desativa sozinho se o cenário deixar de ser possível.
 
 O cálculo está em `public/shared/qualification.js`, que o navegador e o Worker
-importam. O Worker valida os títulos (só ids de clubes que existem) e refaz as
-faixas, então a IA lê as mesmas cores da tela. Os testes conferem, entre outras
-coisas, que o total fecha em 9 clubes onde quer que os dois campeões terminem.
+importam. O Worker valida os títulos (só clubes que existem **e** ainda disputam)
+e refaz as faixas, então a IA lê as mesmas cores da tela.
 
 As regras de herança de vagas estão no comentário do arquivo. **Elas vêm de
 reportagens, não do texto do regulamento** — confira no site da CBF antes de

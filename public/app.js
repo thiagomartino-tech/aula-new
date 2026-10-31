@@ -17,6 +17,7 @@ import {
 import {
   SCENARIOS,
   TITLE_KEYS,
+  allowedTitles,
   classify,
   describeTitles,
   sanitizeTitles,
@@ -34,6 +35,11 @@ const state = {
   // Quem ganha as outras copas, escolhido nos seletores ou pelo atalho do
   // botão "Cenário perfeito". Valores são ids de clube ou null.
   titles: { libertadores: null, sulamericana: null, copaChampion: null, copaRunnerUp: null },
+  // Quem ainda disputa as copas: limita o que os seletores oferecem.
+  competitions: null,
+  // Quantas vagas a tabela distribui agora (e sem nenhum título escolhido).
+  slots: { direct: 0, pre: 0 },
+  baseSlots: { direct: 0, pre: 0 },
   // Faixa de cada clube na tabela de agora: teamId -> { zone, viaTitle }.
   classes: new Map(),
   meta: null,
@@ -61,6 +67,7 @@ const el = {
   scenarioPanel: document.getElementById('scenarioPanel'),
   scenarioFields: document.getElementById('scenarioFields'),
   scenarioCount: document.getElementById('scenarioCount'),
+  scenarioSlots: document.getElementById('scenarioSlots'),
   clearBtn: document.getElementById('clearBtn'),
   saveBtn: document.getElementById('saveBtn'),
   analyzeBtn: document.getElementById('analyzeBtn'),
@@ -306,7 +313,7 @@ function renderMatchCell(game, row, isFirst) {
 
 /** Títulos válidos escolhidos agora, ou null quando a tabela está pura. */
 function activeTitles() {
-  return sanitizeTitles(state.titles, state.teams.map((t) => t.id));
+  return sanitizeTitles(state.titles, state.teams.map((t) => t.id), state.competitions);
 }
 
 function renderRow(row) {
@@ -423,11 +430,11 @@ function render() {
     predictions: state.predictions,
   });
 
-  state.classes = classify(
-    rows,
-    state.zones,
-    activeTitles(),
-  );
+  const classified = classify(rows, state.zones, activeTitles());
+  state.classes = classified.byTeam;
+  state.slots = classified.slots;
+  state.baseSlots = classify(rows, state.zones, null).slots;
+  renderSlots();
   renderZoneLegend();
   renderHead();
   el.tableBody.replaceChildren(...rows.map(renderRow));
@@ -551,35 +558,98 @@ const TITLE_FIELDS = {
   copaRunnerUp: ['Vice da Copa do Brasil', 'Copa do Brasil runner-up'],
 };
 
-/** Pares de campos em que o mesmo clube não pode aparecer nos dois. */
-const EXCLUSIVE = { copaChampion: 'copaRunnerUp', copaRunnerUp: 'copaChampion',
-  libertadores: 'sulamericana', sulamericana: 'libertadores' };
+const fmtDay = (iso) => iso.split('-').reverse().slice(0, 2).join('/');
+
+/** Em que fase está a copa de cada seletor, para explicar por que há tão poucas opções. */
+function stageNote(key) {
+  const c = state.competitions;
+  if (!c) return '';
+  if (key === 'libertadores' || key === 'sulamericana') {
+    const comp = c[key];
+    return `Final em ${fmtDay(comp.date)}, contra ${comp.foreign}`;
+  }
+  return `${c.copa.stage === 'semifinais' ? 'Semifinais agora' : 'Final'}; final em ${fmtDay(c.copa.date)}`;
+}
+
+/** O que o seletor oferece quando nada foi escolhido. */
+function blankLabel(key) {
+  const c = state.competitions;
+  return key === 'libertadores' || key === 'sulamericana'
+    ? `Fora do Brasil (${c?.[key]?.foreign ?? 'outro clube'})`
+    : 'Ainda não definido';
+}
+
+/** Descarta o que deixou de ser possível depois de uma escolha (ex.: vice da mesma chave). */
+function normalizeTitles() {
+  const clean = sanitizeTitles(state.titles, state.teams.map((t) => t.id), state.competitions);
+  for (const key of TITLE_KEYS) state.titles[key] = clean?.[key] ?? null;
+}
 
 /** Põe nos seletores o que está em state.titles e atualiza o resumo e o botão. */
 function syncScenarioControls() {
+  normalizeTitles();
+  const allowed = allowedTitles(state.competitions, state.titles);
+  const nameOf = Object.fromEntries(state.teams.map((t) => [t.id, t.name]));
+
   for (const select of el.scenarioFields.querySelectorAll('select')) {
     const key = select.dataset.key;
-    select.value = state.titles[key] ?? '';
-    // O clube escolhido no campo que se exclui some das opções deste.
-    const other = state.titles[EXCLUSIVE[key]];
-    for (const option of select.options) {
-      option.disabled = Boolean(option.value) && option.value === other;
+    const ids = allowed ? allowed[key] : state.teams.map((t) => t.id);
+    const signature = ids.join('|');
+    // Só reconstrói as opções quando a lista mudou, para não fechar um menu aberto.
+    if (select.dataset.options !== signature) {
+      select.dataset.options = signature;
+      select.replaceChildren(
+        h('option', { value: '', text: blankLabel(key) }),
+        ...ids.map((id) => h('option', { value: id, text: nameOf[id] ?? id })),
+      );
     }
+    select.value = state.titles[key] ?? '';
   }
+
   const n = TITLE_KEYS.filter((k) => state.titles[k]).length;
   el.scenarioCount.textContent = n ? `(${n} definido${n > 1 ? 's' : ''})` : '';
-  const preset = TITLE_KEYS.every((k) => state.titles[k] === SCENARIOS.perfect[k]);
-  el.perfectBtn.setAttribute('aria-pressed', String(preset));
+
+  // O atalho só vale enquanto o cenário perfeito ainda for possível.
+  const perfect = sanitizeTitles(SCENARIOS.perfect, state.teams.map((t) => t.id), state.competitions);
+  const possible = TITLE_KEYS.every((k) => perfect?.[k] === SCENARIOS.perfect[k]);
+  el.perfectBtn.disabled = !possible;
+  el.perfectBtn.title = possible
+    ? 'Preenche os títulos: Palmeiras campeão da Libertadores e da Copa do Brasil; Atlético-MG campeão da Sul-Americana e vice da Copa do Brasil'
+    : 'Esse cenário não é mais possível: algum dos clubes já foi eliminado';
+  const on = possible && TITLE_KEYS.every((k) => state.titles[k] === SCENARIOS.perfect[k]);
+  el.perfectBtn.setAttribute('aria-pressed', String(on));
+}
+
+/** Diz quantas vagas a tabela distribui agora, e quanto isso mudou por causa dos títulos. */
+function renderSlots() {
+  const { direct, pre } = state.slots;
+  const base = state.baseSlots;
+  const extraDirect = direct - base.direct;
+  const extraPre = pre - base.pre;
+  const changed = extraDirect !== 0 || extraPre !== 0;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const gain = (d, p) =>
+    [d ? `+${d} direta${d > 1 ? 's' : ''}` : '', p ? `+${p} prévia${p > 1 ? 's' : ''}` : '']
+      .filter(Boolean)
+      .join(', ');
+  el.scenarioSlots.replaceChildren(
+    document.createTextNode(
+      `Vagas pela tabela: ${plural(direct, 'direta', 'diretas')} e ${plural(pre, 'na prévia', 'na prévia')}` +
+        (changed ? ` (${gain(extraDirect, extraPre)} por causa dos títulos)` : ''),
+    ),
+    h('span', {
+      className: 'en',
+      text:
+        `Places through the table: ${direct} direct, ${pre} in the qualifying round` +
+        (changed ? ` (${extraDirect + extraPre > 0 ? '+' : ''}${extraDirect + extraPre} from the cup results)` : ''),
+    }),
+  );
 }
 
 function initScenario() {
-  const teams = [...state.teams].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   el.scenarioFields.replaceChildren(
     ...TITLE_KEYS.map((key) => {
-      const select = h('select', { id: `title-${key}`, 'data-key': key }, [
-        h('option', { value: '', text: 'Outro clube ou não definido' }),
-        ...teams.map((t) => h('option', { value: t.id, text: t.name })),
-      ]);
+      const select = h('select', { id: `title-${key}`, 'data-key': key });
       select.addEventListener('change', () => {
         state.titles[key] = select.value || null;
         syncScenarioControls();
@@ -588,6 +658,7 @@ function initScenario() {
       return h('label', { className: 'scenario__field', for: `title-${key}` }, [
         h('span', { text: TITLE_FIELDS[key][0] }),
         h('span', { className: 'en', text: TITLE_FIELDS[key][1] }),
+        h('span', { className: 'scenario__stage', text: stageNote(key) }),
         select,
       ]);
     }),
@@ -750,6 +821,7 @@ async function start() {
     standings: data.standings,
     fixtures: data.fixtures,
     zones: data.zones,
+    competitions: data.competitions ?? null,
     meta: data.meta,
     season: data.season,
     source: data.source,
