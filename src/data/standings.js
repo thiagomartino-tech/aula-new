@@ -1,8 +1,8 @@
 /**
- * Classificação do Brasileirão Série A 2026 após a 32ª rodada e 9 dos 10
- * jogos da 33ª (falta Coritiba x Vitória, de 31/10).
+ * Classificação do Brasileirão Série A 2026 após a 33ª rodada.
  *
- * Snapshot coletado em 31/10/2026. A fonte pretendida era a tabela do
+ * Snapshot coletado em 05/11/2026. A 34ª rodada começou em 2/11, mas nenhuma
+ * fonte trouxe placar até esta coleta, então ela ainda não entrou. A fonte pretendida era a tabela do
  * ge.globo.com; o domínio está bloqueado na rede desta sessão, então os
  * números vieem de agregadores que publicam a mesma tabela (SoFutebol,
  * O Tempo, Diário Celeste) — veja README.md > "Fonte dos dados".
@@ -13,7 +13,7 @@
  * pts é redundante (3*w + d) e fica aqui só para conferência contra a fonte;
  * `assertStandings()` valida a consistência de todas as linhas.
  */
-export const LAST_ROUND_PLAYED = 32;
+export const LAST_ROUND_PLAYED = 33;
 export const TOTAL_ROUNDS = 38;
 
 export const STANDINGS = [
@@ -28,9 +28,9 @@ export const STANDINGS = [
   { teamId: 'sao-paulo',     played: 33, won: 12, drawn:  7, lost: 14, goalsFor: 39, goalsAgainst: 39, pts: 43 },
   { teamId: 'bragantino',    played: 33, won: 12, drawn:  8, lost: 13, goalsFor: 42, goalsAgainst: 38, pts: 44 },
   { teamId: 'botafogo',      played: 33, won: 10, drawn:  9, lost: 14, goalsFor: 45, goalsAgainst: 53, pts: 39 },
-  { teamId: 'coritiba',      played: 32, won: 10, drawn:  9, lost: 13, goalsFor: 38, goalsAgainst: 50, pts: 39 },
+  { teamId: 'coritiba',      played: 33, won: 11, drawn:  9, lost: 13, goalsFor: 40, goalsAgainst: 50, pts: 42 },
   { teamId: 'vasco',         played: 32, won: 10, drawn:  8, lost: 14, goalsFor: 40, goalsAgainst: 49, pts: 38 },
-  { teamId: 'vitoria',       played: 32, won: 10, drawn:  8, lost: 14, goalsFor: 35, goalsAgainst: 46, pts: 38 },
+  { teamId: 'vitoria',       played: 33, won: 10, drawn:  8, lost: 15, goalsFor: 35, goalsAgainst: 48, pts: 38 },
   { teamId: 'mirassol',      played: 33, won:  9, drawn: 10, lost: 14, goalsFor: 37, goalsAgainst: 47, pts: 37 },
   { teamId: 'internacional', played: 33, won:  8, drawn: 11, lost: 14, goalsFor: 37, goalsAgainst: 42, pts: 35 },
   { teamId: 'gremio',        played: 33, won:  9, drawn: 10, lost: 14, goalsFor: 37, goalsAgainst: 44, pts: 37 },

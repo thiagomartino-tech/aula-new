@@ -34,16 +34,52 @@ export const SCENARIOS = {
 };
 
 /**
- * Limpa os títulos vindos de fora (do cliente, no Worker): só ids de clubes
- * conhecidos, e nada de o mesmo clube ocupando duas posições que se excluem.
- * Devolve null quando nenhum título foi escolhido, que é a tabela pura.
+ * Quem pode ser escolhido em cada título, dado quem ainda disputa e o que já
+ * foi escolhido. Na Copa do Brasil a final é entre o vencedor de cada chave das
+ * semifinais, então escolher o campeão tira da lista do vice os clubes da mesma
+ * chave dele, e vice-versa.
+ *
+ * Devolve null sem `competitions`: tudo é permitido.
  */
-export function sanitizeTitles(raw, validIds) {
+export function allowedTitles(competitions, titles = {}) {
+  if (!competitions) return null;
+  const semis = competitions.copa?.semifinals ?? [];
+  const all = semis.flat();
+  const otherSide = (team) => {
+    const side = semis.findIndex((group) => group.includes(team));
+    return side < 0 ? all : semis.filter((_, i) => i !== side).flat();
+  };
+  return {
+    libertadores: competitions.libertadores?.brazilian ?? [],
+    sulamericana: competitions.sulamericana?.brazilian ?? [],
+    copaChampion: titles.copaRunnerUp ? otherSide(titles.copaRunnerUp) : all,
+    copaRunnerUp: titles.copaChampion ? otherSide(titles.copaChampion) : all,
+  };
+}
+
+/**
+ * Limpa os títulos vindos de fora (do cliente, no Worker): só ids de clubes
+ * conhecidos e, com `competitions`, só quem ainda disputa; nada de o mesmo clube
+ * ocupando duas posições que se excluem. Devolve null quando nenhum título foi
+ * escolhido, que é a tabela pura.
+ */
+export function sanitizeTitles(raw, validIds, competitions = null) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const ids = new Set(validIds);
+  const clean = (value) => (typeof value === 'string' && ids.has(value) ? value : null);
   const out = {};
-  for (const key of TITLE_KEYS) {
-    out[key] = typeof raw[key] === 'string' && ids.has(raw[key]) ? raw[key] : null;
+  for (const key of TITLE_KEYS) out[key] = clean(raw[key]);
+
+  if (competitions) {
+    // O campeão da Copa é validado primeiro; o vice depende da chave dele.
+    const first = allowedTitles(competitions);
+    for (const key of ['libertadores', 'sulamericana', 'copaChampion']) {
+      if (out[key] && !first[key].includes(out[key])) out[key] = null;
+    }
+    const vice = allowedTitles(competitions, { copaChampion: out.copaChampion });
+    if (out.copaRunnerUp && !vice.copaRunnerUp.includes(out.copaRunnerUp)) {
+      out.copaRunnerUp = null;
+    }
   }
   if (out.copaChampion && out.copaChampion === out.copaRunnerUp) out.copaRunnerUp = null;
   if (out.libertadores && out.libertadores === out.sulamericana) out.sulamericana = null;
@@ -85,7 +121,8 @@ const spanOf = (zones, id) => {
  * @param {string[]} order  clubes por posição, do 1º ao último
  * @param {Array} zones     ZONES: de onde saem os tamanhos das faixas
  * @param {object|null} titles  títulos limpos por sanitizeTitles, ou null para a tabela pura
- * @returns {{ zoneOf: Map<string,string>, viaTitle: Set<string> }}
+ * @returns {{ zoneOf: Map<string,string>, viaTitle: Set<string>, slots: { direct: number, pre: number } }}
+ *   `slots` é quantas vagas a tabela do Brasileirão distribui (sem contar quem entrou por título)
  */
 export function qualificationFor(order, zones, titles = null) {
   const base = {
@@ -145,31 +182,32 @@ export function qualificationFor(order, zones, titles = null) {
   eligible.slice(split[0], split[1]).forEach((t) => zoneOf.set(t, PRE));
   eligible.slice(split[1], split[1] + base.sula).forEach((t) => zoneOf.set(t, SULA));
 
-  return { zoneOf, viaTitle };
+  return { zoneOf, viaTitle, slots: { direct: leagueDirect, pre: leaguePre } };
 }
 
 /**
  * Cor de cada clube da tabela projetada. O rebaixamento é sempre por posição e
  * vence qualquer vaga: um campeão que cai continua aparecendo como caído.
  *
- * @returns {Map<string, { zone: string|null, viaTitle: boolean }>}
+ * @returns {{ byTeam: Map<string, { zone: string|null, viaTitle: boolean }>,
+ *   slots: { direct: number, pre: number } }}
  */
 export function classify(rows, zones, scenario = null) {
   const sorted = [...rows].sort((a, b) => a.position - b.position);
-  const { zoneOf, viaTitle } = qualificationFor(
+  const { zoneOf, viaTitle, slots } = qualificationFor(
     sorted.map((r) => r.teamId),
     zones,
     scenario,
   );
-  const out = new Map();
+  const byTeam = new Map();
   for (const row of sorted) {
     const drop = zones.find(
       (z) => z.id === 'rebaixamento' && row.position >= z.from && row.position <= z.to,
     );
-    out.set(row.teamId, {
+    byTeam.set(row.teamId, {
       zone: drop ? drop.id : (zoneOf.get(row.teamId) ?? null),
       viaTitle: viaTitle.has(row.teamId),
     });
   }
-  return out;
+  return { byTeam, slots };
 }

@@ -104,7 +104,7 @@ test('rebaixamento vale por posição, mesmo para quem tem título', () => {
   const { sulamericana: sula } = SCENARIOS.perfect;
   const order = orderWith({ [sula]: 18 });
   const rows = order.map((teamId, i) => ({ teamId, position: i + 1 }));
-  const got = classify(rows, ZONES, SCENARIOS.perfect).get(sula);
+  const got = classify(rows, ZONES, SCENARIOS.perfect).byTeam.get(sula);
 
   assert.equal(got.zone, 'rebaixamento');
   assert.equal(got.viaTitle, true);
@@ -112,7 +112,7 @@ test('rebaixamento vale por posição, mesmo para quem tem título', () => {
 
 test('sem cenário, classify devolve a cor da posição e ninguém por título', () => {
   const rows = IDS.map((teamId, i) => ({ teamId, position: i + 1 }));
-  const got = classify(rows, ZONES, null);
+  const got = classify(rows, ZONES, null).byTeam;
   assert.equal(got.get(IDS[0]).zone, 'libertadores');
   assert.equal(got.get(IDS[4]).zone, 'libertadores-pre');
   assert.equal(got.get(IDS[19]).zone, 'rebaixamento');

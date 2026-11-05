@@ -13,6 +13,7 @@ import { TEAMS } from '../data/teams.js';
 import { STANDINGS, ZONES } from '../data/standings.js';
 import { FIXTURES } from '../data/fixtures.js';
 import { SEASON } from '../data/season.js';
+import { COMPETITIONS } from '../data/competitions.js';
 import { projectTable, sanitizePredictions } from '../../public/shared/table.js';
 import { classify, describeTitles, sanitizeTitles } from '../../public/shared/qualification.js';
 
@@ -35,7 +36,7 @@ Rules:
  * discordarem sobre quem vai à Libertadores.
  */
 function renderTable(rows, titles) {
-  const classes = classify(rows, ZONES, titles);
+  const classes = classify(rows, ZONES, titles).byTeam;
   const lines = rows.map((r) => {
     const { zone: zoneId, viaTitle } = classes.get(r.teamId);
     const zone = ZONES.find((z) => z.id === zoneId);
@@ -96,6 +97,7 @@ export async function handleAnalyze(request, env) {
   const titles = sanitizeTitles(
     body.titles,
     TEAMS.map((t) => t.id),
+    COMPETITIONS,
   );
 
   const question =

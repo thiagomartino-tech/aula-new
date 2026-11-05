@@ -56,12 +56,33 @@ test('ids que não são clubes são ignorados e não chegam ao prompt', async ()
 });
 
 test('as faixas do prompt mudam com o título: o vice herda a vaga direta', async () => {
+  // Palmeiras já está entre os quatro primeiros, então a vaga direta da Copa
+  // sobra e o vice (Grêmio, da outra chave) herda a direta.
   const base = await promptFor({ predictions: {} });
   const withCup = await promptFor({
     predictions: {},
-    titles: { copaChampion: 'flamengo', copaRunnerUp: 'bahia' },
+    titles: { copaChampion: 'palmeiras', copaRunnerUp: 'gremio' },
   });
-  assert.ok(zoneOf(base, 'Bahia').includes('Sul-Americana'));
-  assert.ok(zoneOf(withCup, 'Bahia').includes('Libertadores'));
-  assert.ok(zoneOf(withCup, 'Bahia').includes('secured by a cup win'));
+  assert.ok(!zoneOf(base, 'Grêmio').includes('Libertadores'));
+  assert.ok(zoneOf(withCup, 'Grêmio').includes('Libertadores'));
+  assert.ok(zoneOf(withCup, 'Grêmio').includes('secured by a cup win'));
+});
+
+test('quem já não disputa a copa é descartado pelo servidor', async () => {
+  // Flamengo e Bahia estão fora da Copa do Brasil e das finais continentais.
+  const prompt = await promptFor({
+    predictions: {},
+    titles: { libertadores: 'flamengo', copaChampion: 'flamengo', copaRunnerUp: 'bahia' },
+  });
+  assert.ok(!prompt.includes('Cup results assumed'));
+});
+
+test('campeão e vice da Copa da mesma chave: o vice é descartado', async () => {
+  // Palmeiras e Vasco se enfrentam na semifinal: não podem ser os dois finalistas.
+  const prompt = await promptFor({
+    predictions: {},
+    titles: { copaChampion: 'palmeiras', copaRunnerUp: 'vasco' },
+  });
+  assert.ok(prompt.includes('Palmeiras win the Copa do Brasil'));
+  assert.ok(!prompt.includes('Vasco are the Copa do Brasil runners-up'));
 });

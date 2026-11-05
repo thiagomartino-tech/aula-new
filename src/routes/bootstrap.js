@@ -26,6 +26,7 @@ import {
   assertFixtures,
 } from '../data/fixtures.js';
 import { SEASON } from '../data/season.js';
+import { COMPETITIONS } from '../data/competitions.js';
 
 /** Lê a classificação do Supabase, ou devolve null se não houver banco/dados. */
 async function standingsFromDb(env) {
@@ -82,6 +83,7 @@ export async function handleBootstrap(request, env) {
       standings,
       fixtures: FIXTURES,
       zones: ZONES,
+      competitions: COMPETITIONS,
       meta: {
         lastRoundPlayed: LAST_ROUND_PLAYED,
         totalRounds: TOTAL_ROUNDS,
