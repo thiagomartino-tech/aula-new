@@ -55,17 +55,18 @@ test('ids que não são clubes são ignorados e não chegam ao prompt', async ()
   assert.ok(!prompt.includes('<script>'));
 });
 
-test('as faixas do prompt mudam com o título: o vice herda a vaga direta', async () => {
-  // Palmeiras já está entre os quatro primeiros, então a vaga direta da Copa
-  // sobra e o vice (Grêmio, da outra chave) herda a direta.
+test('o vice da Copa entra no prompt marcado como vaga por título', async () => {
+  // A marca não depende de onde cada clube está na tabela: quem ganha a vaga pela
+  // Copa é sempre "por título", seja a direta herdada ou a da prévia. A cor da
+  // faixa depende da posição e é conferida em qualification.test.js, com tabelas
+  // sintéticas.
   const base = await promptFor({ predictions: {} });
   const withCup = await promptFor({
     predictions: {},
-    titles: { copaChampion: 'palmeiras', copaRunnerUp: 'gremio' },
+    titles: { copaChampion: 'palmeiras', copaRunnerUp: 'atletico-mg' },
   });
-  assert.ok(!zoneOf(base, 'Grêmio').includes('Libertadores'));
-  assert.ok(zoneOf(withCup, 'Grêmio').includes('Libertadores'));
-  assert.ok(zoneOf(withCup, 'Grêmio').includes('secured by a cup win'));
+  assert.ok(!zoneOf(base, 'Atlético-MG').includes('secured by a cup win'));
+  assert.ok(zoneOf(withCup, 'Atlético-MG').includes('secured by a cup win'));
 });
 
 test('quem já não disputa a copa é descartado pelo servidor', async () => {

@@ -32,13 +32,6 @@ export const FIXTURES = [
   // em standings.js. Os que restam são de 29 a 31/10.
 
   // --- 34ª rodada ---------------------------------------------------------
-  { round: 34, home: 'bragantino',   away: 'santos' },
-  { round: 34, home: 'chapecoense',  away: 'mirassol' },
-  { round: 34, home: 'internacional', away: 'coritiba' },
-  { round: 34, home: 'sao-paulo',    away: 'corinthians' },
-  { round: 34, home: 'flamengo',     away: 'gremio' },
-  { round: 34, home: 'athletico-pr', away: 'vasco' },
-  { round: 34, home: 'botafogo',     away: 'atletico-mg' },
   { round: 34, home: 'palmeiras',    away: 'remo' },
   { round: 34, home: 'cruzeiro',     away: 'bahia' },
   { round: 34, home: 'vitoria',      away: 'fluminense' },
