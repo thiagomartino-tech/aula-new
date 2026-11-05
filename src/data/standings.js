@@ -1,8 +1,9 @@
 /**
- * Classificação do Brasileirão Série A 2026 após a 33ª rodada.
+ * Classificação do Brasileirão Série A 2026 após a 33ª rodada e 7 dos 10
+ * jogos da 34ª (faltam Palmeiras x Remo, Cruzeiro x Bahia e Vitória x
+ * Fluminense, de 5 e 6/11).
  *
- * Snapshot coletado em 05/11/2026. A 34ª rodada começou em 2/11, mas nenhuma
- * fonte trouxe placar até esta coleta, então ela ainda não entrou. A fonte pretendida era a tabela do
+ * Snapshot coletado em 05/11/2026. A fonte pretendida era a tabela do
  * ge.globo.com; o domínio está bloqueado na rede desta sessão, então os
  * números vieem de agregadores que publicam a mesma tabela (SoFutebol,
  * O Tempo, Diário Celeste) — veja README.md > "Fonte dos dados".
@@ -17,26 +18,26 @@ export const LAST_ROUND_PLAYED = 33;
 export const TOTAL_ROUNDS = 38;
 
 export const STANDINGS = [
-  { teamId: 'flamengo',      played: 33, won: 22, drawn:  7, lost:  4, goalsFor: 68, goalsAgainst: 28, pts: 73 },
+  { teamId: 'flamengo',      played: 34, won: 23, drawn:  7, lost:  4, goalsFor: 71, goalsAgainst: 29, pts: 76 },
   { teamId: 'palmeiras',     played: 33, won: 20, drawn: 10, lost:  3, goalsFor: 56, goalsAgainst: 22, pts: 70 },
   { teamId: 'cruzeiro',      played: 33, won: 17, drawn:  6, lost: 10, goalsFor: 52, goalsAgainst: 46, pts: 57 },
-  { teamId: 'athletico-pr',  played: 33, won: 15, drawn:  9, lost:  9, goalsFor: 50, goalsAgainst: 40, pts: 54 },
+  { teamId: 'athletico-pr',  played: 34, won: 15, drawn:  9, lost: 10, goalsFor: 51, goalsAgainst: 43, pts: 54 },
   { teamId: 'fluminense',    played: 33, won: 15, drawn:  9, lost:  9, goalsFor: 52, goalsAgainst: 42, pts: 54 },
-  { teamId: 'atletico-mg',   played: 33, won: 14, drawn:  8, lost: 11, goalsFor: 44, goalsAgainst: 39, pts: 50 },
+  { teamId: 'atletico-mg',   played: 34, won: 14, drawn:  8, lost: 12, goalsFor: 44, goalsAgainst: 40, pts: 50 },
   { teamId: 'bahia',         played: 33, won: 14, drawn: 11, lost:  8, goalsFor: 48, goalsAgainst: 42, pts: 53 },
-  { teamId: 'santos',        played: 33, won: 12, drawn: 11, lost: 10, goalsFor: 49, goalsAgainst: 47, pts: 47 },
-  { teamId: 'sao-paulo',     played: 33, won: 12, drawn:  7, lost: 14, goalsFor: 39, goalsAgainst: 39, pts: 43 },
-  { teamId: 'bragantino',    played: 33, won: 12, drawn:  8, lost: 13, goalsFor: 42, goalsAgainst: 38, pts: 44 },
-  { teamId: 'botafogo',      played: 33, won: 10, drawn:  9, lost: 14, goalsFor: 45, goalsAgainst: 53, pts: 39 },
-  { teamId: 'coritiba',      played: 33, won: 11, drawn:  9, lost: 13, goalsFor: 40, goalsAgainst: 50, pts: 42 },
-  { teamId: 'vasco',         played: 32, won: 10, drawn:  8, lost: 14, goalsFor: 40, goalsAgainst: 49, pts: 38 },
+  { teamId: 'santos',        played: 34, won: 12, drawn: 11, lost: 11, goalsFor: 50, goalsAgainst: 49, pts: 47 },
+  { teamId: 'sao-paulo',     played: 34, won: 12, drawn:  8, lost: 14, goalsFor: 39, goalsAgainst: 39, pts: 44 },
+  { teamId: 'bragantino',    played: 34, won: 13, drawn:  8, lost: 13, goalsFor: 44, goalsAgainst: 39, pts: 47 },
+  { teamId: 'botafogo',      played: 34, won: 11, drawn:  9, lost: 14, goalsFor: 46, goalsAgainst: 53, pts: 42 },
+  { teamId: 'coritiba',      played: 34, won: 11, drawn:  9, lost: 14, goalsFor: 40, goalsAgainst: 51, pts: 42 },
+  { teamId: 'vasco',         played: 33, won: 11, drawn:  8, lost: 14, goalsFor: 43, goalsAgainst: 50, pts: 41 },
   { teamId: 'vitoria',       played: 33, won: 10, drawn:  8, lost: 15, goalsFor: 35, goalsAgainst: 48, pts: 38 },
-  { teamId: 'mirassol',      played: 33, won:  9, drawn: 10, lost: 14, goalsFor: 37, goalsAgainst: 47, pts: 37 },
-  { teamId: 'internacional', played: 33, won:  8, drawn: 11, lost: 14, goalsFor: 37, goalsAgainst: 42, pts: 35 },
-  { teamId: 'gremio',        played: 33, won:  9, drawn: 10, lost: 14, goalsFor: 37, goalsAgainst: 44, pts: 37 },
-  { teamId: 'corinthians',   played: 33, won:  9, drawn:  9, lost: 15, goalsFor: 36, goalsAgainst: 42, pts: 36 },
+  { teamId: 'mirassol',      played: 34, won: 10, drawn: 10, lost: 14, goalsFor: 39, goalsAgainst: 48, pts: 40 },
+  { teamId: 'internacional', played: 34, won:  9, drawn: 11, lost: 14, goalsFor: 38, goalsAgainst: 42, pts: 38 },
+  { teamId: 'gremio',        played: 34, won:  9, drawn: 10, lost: 15, goalsFor: 38, goalsAgainst: 47, pts: 37 },
+  { teamId: 'corinthians',   played: 34, won:  9, drawn: 10, lost: 15, goalsFor: 36, goalsAgainst: 42, pts: 37 },
   { teamId: 'remo',          played: 33, won:  6, drawn: 11, lost: 16, goalsFor: 36, goalsAgainst: 51, pts: 29 },
-  { teamId: 'chapecoense',   played: 32, won:  4, drawn:  9, lost: 19, goalsFor: 32, goalsAgainst: 66, pts: 21 },
+  { teamId: 'chapecoense',   played: 33, won:  4, drawn:  9, lost: 20, goalsFor: 33, goalsAgainst: 68, pts: 21 },
 ];
 
 /**
