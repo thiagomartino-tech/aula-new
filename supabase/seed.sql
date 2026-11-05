@@ -1,5 +1,5 @@
 -- GERADO POR scripts/generate-seed.mjs — não edite à mão.
--- Classificação após a 32ª rodada do Brasileirão 2026.
+-- Classificação após a 33ª rodada do Brasileirão 2026.
 -- Rode supabase/schema.sql antes deste arquivo.
 
 begin;
@@ -44,9 +44,9 @@ insert into public.standings
   ('sao-paulo', 33, 12, 7, 14, 39, 39),
   ('bragantino', 33, 12, 8, 13, 42, 38),
   ('botafogo', 33, 10, 9, 14, 45, 53),
-  ('coritiba', 32, 10, 9, 13, 38, 50),
+  ('coritiba', 33, 11, 9, 13, 40, 50),
   ('vasco', 32, 10, 8, 14, 40, 49),
-  ('vitoria', 32, 10, 8, 14, 35, 46),
+  ('vitoria', 33, 10, 8, 15, 35, 48),
   ('mirassol', 33, 9, 10, 14, 37, 47),
   ('internacional', 33, 8, 11, 14, 37, 42),
   ('gremio', 33, 9, 10, 14, 37, 44),
@@ -61,7 +61,6 @@ on conflict (team_id) do update set
 -- Jogos restantes (sem placar: ainda não foram disputados)
 insert into public.fixtures (id, round, home_id, away_id, deferred) values
   ('r21-chapecoense-vasco', 21, 'chapecoense', 'vasco', true),
-  ('r33-coritiba-vitoria', 33, 'coritiba', 'vitoria', false),
   ('r34-bragantino-santos', 34, 'bragantino', 'santos', false),
   ('r34-chapecoense-mirassol', 34, 'chapecoense', 'mirassol', false),
   ('r34-internacional-coritiba', 34, 'internacional', 'coritiba', false),
