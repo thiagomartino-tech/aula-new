@@ -1,5 +1,5 @@
 -- GERADO POR scripts/generate-seed.mjs — não edite à mão.
--- Classificação após a 33ª rodada do Brasileirão 2026.
+-- Classificação após a 34ª rodada do Brasileirão 2026.
 -- Rode supabase/schema.sql antes deste arquivo.
 
 begin;
@@ -34,24 +34,24 @@ on conflict (id) do update set
 insert into public.standings
   (team_id, played, won, drawn, lost, goals_for, goals_against) values
   ('flamengo', 34, 23, 7, 4, 71, 29),
-  ('palmeiras', 33, 20, 10, 3, 56, 22),
-  ('cruzeiro', 33, 17, 6, 10, 52, 46),
+  ('palmeiras', 34, 21, 10, 3, 62, 23),
+  ('cruzeiro', 34, 18, 6, 10, 55, 48),
   ('athletico-pr', 34, 15, 9, 10, 51, 43),
-  ('fluminense', 33, 15, 9, 9, 52, 42),
-  ('atletico-mg', 34, 14, 8, 12, 44, 40),
-  ('bahia', 33, 14, 11, 8, 48, 42),
+  ('fluminense', 34, 16, 9, 9, 55, 42),
+  ('atletico-mg', 35, 14, 9, 12, 44, 40),
+  ('bahia', 34, 14, 11, 9, 50, 45),
   ('santos', 34, 12, 11, 11, 50, 49),
   ('sao-paulo', 34, 12, 8, 14, 39, 39),
   ('bragantino', 34, 13, 8, 13, 44, 39),
   ('botafogo', 34, 11, 9, 14, 46, 53),
   ('coritiba', 34, 11, 9, 14, 40, 51),
   ('vasco', 33, 11, 8, 14, 43, 50),
-  ('vitoria', 33, 10, 8, 15, 35, 48),
-  ('mirassol', 34, 10, 10, 14, 39, 48),
+  ('vitoria', 34, 10, 8, 16, 35, 51),
+  ('mirassol', 35, 10, 11, 14, 39, 48),
   ('internacional', 34, 9, 11, 14, 38, 42),
   ('gremio', 34, 9, 10, 15, 38, 47),
   ('corinthians', 34, 9, 10, 15, 36, 42),
-  ('remo', 33, 6, 11, 16, 36, 51),
+  ('remo', 34, 6, 11, 17, 37, 57),
   ('chapecoense', 33, 4, 9, 20, 33, 68)
 on conflict (team_id) do update set
   played = excluded.played, won = excluded.won, drawn = excluded.drawn,
@@ -61,14 +61,10 @@ on conflict (team_id) do update set
 -- Jogos restantes (sem placar: ainda não foram disputados)
 insert into public.fixtures (id, round, home_id, away_id, deferred) values
   ('r21-chapecoense-vasco', 21, 'chapecoense', 'vasco', true),
-  ('r34-palmeiras-remo', 34, 'palmeiras', 'remo', false),
-  ('r34-cruzeiro-bahia', 34, 'cruzeiro', 'bahia', false),
-  ('r34-vitoria-fluminense', 34, 'vitoria', 'fluminense', false),
   ('r35-vasco-internacional', 35, 'vasco', 'internacional', false),
   ('r35-flamengo-athletico-pr', 35, 'flamengo', 'athletico-pr', false),
   ('r35-sao-paulo-fluminense', 35, 'sao-paulo', 'fluminense', false),
   ('r35-corinthians-botafogo', 35, 'corinthians', 'botafogo', false),
-  ('r35-mirassol-atletico-mg', 35, 'mirassol', 'atletico-mg', false),
   ('r35-cruzeiro-palmeiras', 35, 'cruzeiro', 'palmeiras', false),
   ('r35-gremio-bahia', 35, 'gremio', 'bahia', false),
   ('r35-coritiba-santos', 35, 'coritiba', 'santos', false),

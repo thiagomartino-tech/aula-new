@@ -190,12 +190,11 @@ preencha. Esse arquivo está no `.gitignore`.
 
 ## Fonte dos dados
 
-A classificação em `src/data/standings.js` é um retrato de **05/11/2026**,
-depois da **33ª rodada** e de 7 dos 10 jogos da 34ª (faltam Palmeiras x Remo,
-Cruzeiro x Bahia e Vitória x Fluminense), e os jogos em `src/data/fixtures.js`
-são o que resta das rodadas 34 a 38 da tabela da CBF mais o jogo atrasado da 21ª
-rodada entre Chapecoense e Vasco, adiado pelos playoffs da Sul-Americana e
-ainda sem data.
+A classificação em `src/data/standings.js` é um retrato de **15/11/2026**,
+depois da **34ª rodada** e de 1 jogo da 35ª (Mirassol x Atlético-MG, antecipado
+para 14/11), e os jogos em `src/data/fixtures.js` são o que resta das rodadas 35 a
+38 da tabela da CBF mais o jogo atrasado da 21ª rodada entre Chapecoense e Vasco,
+adiado pelos playoffs da Sul-Americana e ainda sem data.
 
 O pedido original era pegar os números do ge.globo.com. O domínio está
 bloqueado na rede onde este projeto foi montado, então os dados vieram de

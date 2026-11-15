@@ -11,12 +11,12 @@
 export const DEFERRED_ROUND = 21;
 
 /** As 6 rodadas que a tabela do simulador mostra em colunas. */
-export const REMAINING_ROUNDS = [34, 35, 36, 37, 38];
+export const REMAINING_ROUNDS = [35, 36, 37, 38];
 
 export const ROUND_DATES = {
   33: '28–31/10',
   34: '02–04/11',
-  35: '18–19/11',
+  35: '14–19/11',
   36: '21–23/11',
   37: '28–29/11',
   38: '02/12',
@@ -32,16 +32,12 @@ export const FIXTURES = [
   // em standings.js. Os que restam são de 29 a 31/10.
 
   // --- 34ª rodada ---------------------------------------------------------
-  { round: 34, home: 'palmeiras',    away: 'remo' },
-  { round: 34, home: 'cruzeiro',     away: 'bahia' },
-  { round: 34, home: 'vitoria',      away: 'fluminense' },
 
   // --- 35ª rodada ---------------------------------------------------------
   { round: 35, home: 'vasco',        away: 'internacional' },
   { round: 35, home: 'flamengo',     away: 'athletico-pr' },
   { round: 35, home: 'sao-paulo',    away: 'fluminense' },
   { round: 35, home: 'corinthians',  away: 'botafogo' },
-  { round: 35, home: 'mirassol',     away: 'atletico-mg' },
   { round: 35, home: 'cruzeiro',     away: 'palmeiras' },
   { round: 35, home: 'gremio',       away: 'bahia' },
   { round: 35, home: 'coritiba',     away: 'santos' },
